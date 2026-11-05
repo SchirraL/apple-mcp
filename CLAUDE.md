@@ -22,7 +22,8 @@ src/
   registry.ts         # the list of ToolModules — add an app here, nothing else
   lib/applescript.ts  # runJxa / runAppleScript: timeouts, escaping, error mapping
   lib/safety.ts       # confirmField + withConfirm (preview unless confirm: true)
-  lib/types.ts        # defineTool / toolModule (zod → JSON schema, validation, errors)
+  lib/types.ts        # defineTool / toolModule (zod → JSON schema, annotations, audit, errors)
+  lib/audit.ts        # audit.jsonl writer/reader: allowlisted ids, content as lengths only
   tools/<app>/
     handler.ts        # zod schemas + MCP-facing logic; factory takes a bridge (for tests)
     bridge.ts         # the only code that touches the OS
@@ -40,6 +41,7 @@ Apps and their backends (chosen by measurement — see Gotchas):
 | shortcuts | `shortcuts` CLI (30s cached list) | `shortcuts run` (always confirm-gated unless allowlisted) |
 | music | Music scripting (batched) | Music scripting — **unverified on a non-empty library** |
 | obsidian | vault files via `fs` (registry: obsidian.json) | `fs`, atomic overwrite |
+| doctor, audit | always on (not in `APPLE_MCP_APPS`) | — (read-only) |
 
 SQLite access: always the system `sqlite3` CLI (`-readonly`, `mode=ro` URI) — never
 `bun:sqlite` (the build runs on node). User values go in as hex literals, never raw SQL.
@@ -55,6 +57,9 @@ Messages and Mail reads need Full Disk Access for the host process.
 LMCP's tool set is the reference for scope/naming. Copy capabilities, not code.
 
 ## Conventions
+- Every `defineTool` declares `effect`: `read` (no side effects), `write` (local changes,
+  incl. opening UI), `external` (sends / runs automation). It drives MCP annotations and the
+  audit log. A tool with a `confirm` field must not be `read` (a unit test enforces it).
 - TypeScript strict, ESM, Bun bundler resolution. Tabs for indentation (normalise files you
   touch); lines < 100 chars.
 - Explicit types on function params/returns; type guards validate all incoming tool args.
@@ -71,6 +76,16 @@ LMCP's tool set is the reference for scope/naming. Copy capabilities, not code.
 Any tool that sends (mail, iMessage), deletes, or overwrites requires `confirm: true`.
 Without it, return a preview of exactly what would happen and make no changes. Unit-test both
 paths. Creating new items (note, reminder, draft) does not need confirmation.
+
+## Audit log
+Every non-read call that reaches `run()` appends one line to
+`~/Library/Logs/apple-mcp/audit.jsonl` (0600, rotates at 5 MB to `.1`): tool, effect,
+mode (confirmed / previewed / direct), outcome, ms, target. The target comes from an
+ALLOWLIST of identifier keys in `src/lib/audit.ts`; content keys (body, subject, title, name,
+notes, query, …) are logged as lengths; unknown keys are dropped. Error text is passed through
+`redactArgs` (argument values replaced). When adding a tool whose args carry personal data
+under an allowlisted key (e.g. addresses in `from`/`to`), give it an `auditTarget`. Logging is
+a no-op under `bun test` unless `APPLE_MCP_AUDIT_LOG` points elsewhere.
 
 ## File access policy
 Every tool that takes or returns a filesystem path uses `src/lib/paths.ts`:
@@ -91,12 +106,27 @@ tool — only `trash_file` (confirm-gated).
 `127.0.0.1:47823/mcp` (`APPLE_MCP_PORT`). Gates in `src/http.ts`: Host allowlist (DNS
 rebinding), any browser `Origin` refused, bearer token from
 `~/Library/Application Support/apple-mcp/token` (0600; never in the plist or logs).
-`GET /health` is unauthenticated. The LaunchAgent `io.schirra.apple-mcp` starts it at login
+`GET /health` is unauthenticated (reports version, tool count, enabled apps).
+`APPLE_MCP_APPS` (comma-separated module names, unset = all) limits which apps register;
+unknown names fail at startup. The LaunchAgent `io.schirra.apple-mcp` starts it at login
 and restarts it on crash; logs in `~/Library/Logs/apple-mcp/`. After code changes:
 `bun run build && bun run service restart`.
 Under launchd, macOS privacy permissions belong to the **node binary** (Full Disk Access,
-Calendars, Reminders, Automation) — not the terminal. Homebrew node upgrades change the
-binary path and may require re-granting. `dist/bridge.js` is a stdio⇄HTTP bridge for
+Calendars, Reminders, Contacts, Automation) — not the terminal. The plist therefore runs a
+pinned copy, `~/Library/Application Support/apple-mcp/runtime/node` (`service install`
+never overwrites it; `service update-node --yes` replaces it). Homebrew's node can't be
+pinned: it loads libnode + Homebrew dylibs by path, and its signature is ad-hoc (designated
+requirement = cdhash, so every upgrade loses grants). Use the nodejs.org build (Developer
+ID, team HX7739G8FX: grants are tied to identifier + team). Install never silently falls
+back to another node on PATH; it names candidates and asks for `--node`. Every
+`APPLE_MCP_*` var at install time goes into the plist, except `APPLE_MCP_TOKEN`.
+`service doctor` / `apple_mcp_doctor` / `node dist/index.js --doctor` report permission
+status without prompting: EventKit/CNContactStore authorizationStatus, FDA by reading 16
+bytes of chat.db / Envelope Index, Automation via `AEDeterminePermissionToAutomateTarget`
+(askUserIfNeeded=false; needs `ObjC.bindFunction` with `^v` — the default binding rejects
+the AEDesc; -600 = app not running, never launched). Run from a terminal, TCC attributes
+to the terminal (responsible process), so only the MCP tool via the service shows the
+service's real view. `dist/bridge.js` is a stdio⇄HTTP bridge for
 stdio-only clients (Claude Desktop); it reads the token itself.
 
 ## Clients
@@ -134,5 +164,11 @@ stdio-only clients (Claude Desktop); it reads the token itself.
 - Tool names are global: Obsidian tools are `obsidian_*`, Music `music_*` (registry throws on
   duplicates). Obsidian refuses dot-segments in note paths so writes can't reach
   `.obsidian/plugins`.
+- TCC for a launchd binary: only Full Disk Access has a "+" button. Calendars, Reminders,
+  Contacts and Automation list the binary only after its first request, so after
+  `service install`/`update-node` call list_calendars, list_reminder_lists, list_contacts
+  through the service and click Allow. The 15s bridge timeout fires while the prompt is open
+  — the second call succeeds. Running the pinned node from a terminal won't help (TCC
+  attributes it to the terminal).
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

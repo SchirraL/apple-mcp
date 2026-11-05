@@ -1,8 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
+	nodeVersionOk,
+	unknownArgs,
 	claudeCodeCommand,
+	collectPlistEnv,
 	desktopConfig,
 	generatePlist,
+	pinNode,
+	plistNodePath,
 	stabiliseNodePath,
 	summariseLaunchctl,
 	tail,
@@ -86,5 +94,109 @@ describe("config and parsing helpers", () => {
 	});
 	test("tail", () => {
 		expect(tail("a\nb\nc\n", 2)).toBe("b\nc");
+	});
+});
+
+describe("plist environment", () => {
+	test("includes APPLE_MCP_* but never the token or other vars", () => {
+		const plist = generatePlist({
+			...base,
+			env: { APPLE_MCP_FILE_ROOTS: "/a:/b", APPLE_MCP_TOKEN: "secret", HOME: "/h", FOO: "x" },
+		});
+		expect(plist).toContain("<key>APPLE_MCP_FILE_ROOTS</key>\n\t\t<string>/a:/b</string>");
+		expect(plist).not.toContain("secret");
+		expect(plist).not.toContain("APPLE_MCP_TOKEN");
+		expect(plist).not.toContain("<key>HOME</key>");
+		expect(plist).not.toContain("FOO");
+	});
+	test("escapes values", () => {
+		const plist = generatePlist({ ...base, env: { APPLE_MCP_FILE_DENY: `<a&"b">` } });
+		expect(plist).toContain("&lt;a&amp;&quot;b&quot;&gt;");
+	});
+	test("port is not duplicated when also in env", () => {
+		const plist = generatePlist({ ...base, port: "5000", env: { APPLE_MCP_PORT: "5000" } });
+		expect(plist.match(/APPLE_MCP_PORT/g)).toHaveLength(1);
+	});
+	test("collectPlistEnv reports an ignored token", () => {
+		const r = collectPlistEnv({ APPLE_MCP_TOKEN: "t", APPLE_MCP_PORT: "1", PATH: "/x" });
+		expect(r.tokenIgnored).toBe(true);
+		expect(r.vars).toEqual({ APPLE_MCP_PORT: "1" });
+	});
+});
+
+describe("pinned node", () => {
+	const noVerify = async (): Promise<void> => {};
+	test("plist uses the pinned path; plistNodePath reads it back", () => {
+		const plist = generatePlist({ ...base, nodePath: "/u/Library/a&b/runtime/node" });
+		expect(plistNodePath(plist)).toBe("/u/Library/a&b/runtime/node");
+	});
+	test("creates the copy with 0700 dir and 0755 binary", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "pin-"));
+		const src = join(dir, "src-node");
+		writeFileSync(src, "binary-v1");
+		const pinned = join(dir, "runtime", "node");
+		const res = await pinNode(src, { pinned, verify: noVerify });
+		expect(res.action).toBe("created");
+		expect(readFileSync(pinned, "utf8")).toBe("binary-v1");
+		expect(statSync(join(dir, "runtime")).mode & 0o777).toBe(0o700);
+		expect(statSync(pinned).mode & 0o777).toBe(0o755);
+	});
+	test("does not overwrite an existing pinned copy", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "pin-"));
+		const src = join(dir, "src-node");
+		const pinned = join(dir, "runtime", "node");
+		writeFileSync(src, "v1");
+		await pinNode(src, { pinned, verify: noVerify });
+		writeFileSync(src, "v2");
+		const res = await pinNode(src, { pinned, verify: noVerify });
+		expect(res.action).toBe("reused");
+		expect(readFileSync(pinned, "utf8")).toBe("v1");
+	});
+	test("replace overwrites; a failed verify keeps the old copy", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "pin-"));
+		const src = join(dir, "src-node");
+		const pinned = join(dir, "runtime", "node");
+		writeFileSync(src, "v1");
+		await pinNode(src, { pinned, verify: noVerify });
+		writeFileSync(src, "v2");
+		await expect(
+			pinNode(src, {
+				pinned,
+				replace: true,
+				verify: async () => {
+					throw new Error("bad copy");
+				},
+			}),
+		).rejects.toThrow("bad copy");
+		expect(readFileSync(pinned, "utf8")).toBe("v1");
+		expect(existsSync(`${pinned}.new`)).toBe(false);
+		const res = await pinNode(src, { pinned, replace: true, verify: noVerify });
+		expect(res.action).toBe("replaced");
+		expect(readFileSync(pinned, "utf8")).toBe("v2");
+	});
+});
+
+describe("unknownArgs", () => {
+	test("rejects --help and stray words so they never reach install", () => {
+		expect(unknownArgs("install", ["--help"])).toEqual(["--help"]);
+		expect(unknownArgs("install", ["now"])).toEqual(["now"]);
+		expect(unknownArgs("status", ["-h"])).toEqual(["-h"]);
+	});
+	test("accepts known flags and --node values", () => {
+		expect(unknownArgs("install", ["--node", "/usr/local/bin/node"])).toEqual([]);
+		expect(unknownArgs("update-node", ["--node", "/x/node", "--yes"])).toEqual([]);
+		expect(unknownArgs("doctor", ["--pinned", "--json"])).toEqual([]);
+		expect(unknownArgs("uninstall", ["--purge"])).toEqual([]);
+		expect(unknownArgs("install", ["--yes"])).toEqual(["--yes"]);
+	});
+});
+
+describe("nodeVersionOk", () => {
+	test("requires node 20+ (global Web Crypto for the MCP SDK)", () => {
+		expect(nodeVersionOk("v18.13.0")).toBe(false);
+		expect(nodeVersionOk("v19.9.0")).toBe(false);
+		expect(nodeVersionOk("v20.0.0")).toBe(true);
+		expect(nodeVersionOk("v26.12.0\n")).toBe(true);
+		expect(nodeVersionOk("garbage")).toBe(false);
 	});
 });

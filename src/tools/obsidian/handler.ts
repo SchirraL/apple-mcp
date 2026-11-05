@@ -408,6 +408,7 @@ export function createObsidianModule(
 	return toolModule([
 		defineTool({
 			name: "obsidian_list_vaults",
+			effect: "read",
 			description:
 				"List the Obsidian vaults on this Mac: name (folder name), path, number of notes, " +
 				"when last opened and whether it is currently open in Obsidian. Start here to get " +
@@ -446,6 +447,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_list_notes",
+			effect: "read",
 			description:
 				"List Markdown notes in an Obsidian vault (optionally one folder), newest-modified " +
 				"first. Returns vault-relative path, title, modified time and size. Skips .obsidian, " +
@@ -480,6 +482,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_search_notes",
+			effect: "read",
 			description:
 				"Search an Obsidian vault by file name and content (case-insensitive; every word " +
 				"must appear). Optional tag filter (#tag in the body or tags: in frontmatter; " +
@@ -558,6 +561,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_read_note",
+			effect: "read",
 			description:
 				"Read one Obsidian note by vault-relative path ('Projects/Plan.md') or by note name " +
 				"as in a [[wikilink]] ('Plan'; an ambiguous name returns the candidate paths). " +
@@ -619,6 +623,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_write_note",
+			effect: "write",
 			description:
 				"Create or modify a Markdown note in an Obsidian vault. mode 'create' (default) " +
 				"fails if the note exists; 'append' adds content at the end and 'prepend' right " +
@@ -676,6 +681,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_daily_note",
+			effect: "write",
 			description:
 				"Read or append to the daily note of an Obsidian vault (today by default, or a " +
 				"date given as YYYY-MM-DD). Honors the vault's daily-notes settings (folder, date " +
@@ -743,6 +749,7 @@ export function createObsidianModule(
 
 		defineTool({
 			name: "obsidian_open_note",
+			effect: "write",
 			description:
 				"Open a vault, or a note in it, in the Obsidian app (obsidian:// URL). Brings " +
 				"Obsidian to the front: only use when the user wants to see the note. To read " +

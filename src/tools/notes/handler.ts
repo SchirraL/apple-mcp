@@ -20,6 +20,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 	return toolModule([
 		defineTool({
 			name: "list_note_folders",
+			effect: "read",
 			description: "List all Apple Notes folders with their account and note count.",
 			schema: z.object({}),
 			async run() {
@@ -30,6 +31,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 
 		defineTool({
 			name: "list_notes",
+			effect: "read",
 			description:
 				"List Apple Notes, sorted by last modified, newest first. Returns snippets only; " +
 				"use read_note for the full text.",
@@ -54,6 +56,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 
 		defineTool({
 			name: "read_note",
+			effect: "read",
 			description:
 				"Read one Apple Note in full (plain text, optionally raw HTML). Locked " +
 				"(password-protected) notes return no text.",
@@ -69,6 +72,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 
 		defineTool({
 			name: "create_note",
+			effect: "write",
 			description:
 				"Create an Apple Note. With format text the body is converted line by line; the " +
 				"title becomes the note's heading. Uses the default folder if none is given.",
@@ -91,6 +95,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 
 		defineTool({
 			name: "update_note",
+			effect: "write",
 			description:
 				"Change an existing note. title renames it, body REPLACES everything below the " +
 				"title, append adds to the end (body and append are mutually exclusive). Requires " +
@@ -156,6 +161,7 @@ export function createNotesModule(bridge: NotesBridge = notesBridge): ToolModule
 
 		defineTool({
 			name: "delete_note",
+			effect: "write",
 			description:
 				'Delete a note (moves it to "Recently Deleted"). Requires confirm: true; ' +
 				"otherwise previews.",

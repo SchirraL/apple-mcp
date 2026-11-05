@@ -37,6 +37,7 @@ export function createCalendarModule(bridge: CalendarBridge = calendarBridge): T
 	return toolModule([
 		defineTool({
 			name: "list_calendars",
+			effect: "read",
 			description: "List all Apple Calendar calendars with their account and writability.",
 			schema: z.object({}),
 			async run() {
@@ -47,6 +48,7 @@ export function createCalendarModule(bridge: CalendarBridge = calendarBridge): T
 
 		defineTool({
 			name: "list_calendar_events",
+			effect: "read",
 			description:
 				"List Apple Calendar events in a time range, sorted by start. Defaults to the " +
 				"next 7 days. The range may not exceed 4 years. Recurring events appear once " +
@@ -83,6 +85,7 @@ export function createCalendarModule(bridge: CalendarBridge = calendarBridge): T
 
 		defineTool({
 			name: "create_calendar_event",
+			effect: "write",
 			description:
 				"Create an event in Apple Calendar. A date-only start (YYYY-MM-DD) creates an " +
 				"all-day event; timed events default to 1 hour if no end is given. Uses the " +
@@ -108,6 +111,7 @@ export function createCalendarModule(bridge: CalendarBridge = calendarBridge): T
 
 		defineTool({
 			name: "update_calendar_event",
+			effect: "write",
 			description:
 				"Change fields of an existing event. Only the fields given are changed; pass " +
 				"null for location, notes or url to clear them. For recurring events pass " +
@@ -138,6 +142,7 @@ export function createCalendarModule(bridge: CalendarBridge = calendarBridge): T
 
 		defineTool({
 			name: "delete_calendar_event",
+			effect: "write",
 			description:
 				"Permanently delete a calendar event. Requires confirm: true; otherwise previews. " +
 				"For recurring events pass occurrenceStart and choose span.",

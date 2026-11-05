@@ -36,6 +36,14 @@
 	},
 	"tools": [
 		{
+			"name": "apple_mcp_doctor",
+			"description": "Diagnose macOS privacy permissions for this server (Calendars, Reminders, Contacts, Full Disk Access for Messages/Mail, Automation for Notes/Messages/Mail/Music/Finder/Contacts). Read-only: never prompts or launches apps. Returns per-check status, the host binary permissions belong to, and the exact System Settings change needed when something is not ok. Use when a tool fails with a permission error."
+		},
+		{
+			"name": "get_audit_log",
+			"description": "Show the most recent entries of apple-mcp's own audit log: every state-changing or outward-facing tool call (and previews) with time, tool, mode (confirmed / previewed / direct), outcome and a privacy-safe target. Message and note content is never logged, only lengths. Newest first."
+		},
+		{
 			"name": "list_reminder_lists",
 			"description": "List all Apple Reminders lists with their number of open reminders."
 		},

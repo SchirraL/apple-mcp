@@ -30,6 +30,8 @@ export function createMapsModule(bridge: MapsBridge = mapsBridge): ToolModule {
 	return toolModule([
 		defineTool({
 			name: "search_places",
+			effect: "read",
+			openWorld: true,
 			description:
 				"Search Apple Maps for places (businesses, stations, addresses, landmarks) and " +
 				"return name, address, coordinates, phone, website and category. Read-only; does " +
@@ -61,6 +63,8 @@ export function createMapsModule(bridge: MapsBridge = mapsBridge): ToolModule {
 
 		defineTool({
 			name: "get_directions",
+			effect: "read",
+			openWorld: true,
 			description:
 				"Calculate a route between two places with Apple Maps data: distance, expected " +
 				"travel time and (for driving and walking) turn-by-turn steps, plus alternatives. " +
@@ -101,6 +105,7 @@ export function createMapsModule(bridge: MapsBridge = mapsBridge): ToolModule {
 
 		defineTool({
 			name: "open_in_maps",
+			effect: "write",
 			description:
 				"UI SIDE EFFECT: opens and brings the Maps app to the front, showing a place " +
 				"search or a route. Use only when the user wants to see it in Maps; for data use " +
@@ -120,6 +125,12 @@ export function createMapsModule(bridge: MapsBridge = mapsBridge): ToolModule {
 				.refine((a) => !a.from || Boolean(a.to), {
 					message: "`from` requires `to`",
 				}),
+			// Places are personal (home, contacts' addresses): log lengths only.
+			auditTarget: (a) => ({
+				...(a.query !== undefined && { queryLen: a.query.length }),
+				...(a.from !== undefined && { fromLen: a.from.length }),
+				...(a.to !== undefined && { toLen: a.to.length }),
+			}),
 			async run(args) {
 				const url = buildMapsUrl(args);
 				await bridge.openUrl(url);

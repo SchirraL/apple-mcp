@@ -102,6 +102,7 @@ export function createShortcutsModule(
 	return toolModule([
 		defineTool({
 			name: "list_shortcuts",
+			effect: "read",
 			description:
 				"List the user's Apple Shortcuts (name, identifier, folder). Optional filters: " +
 				"'folder' (folder name or identifier; 'none' for shortcuts not in a folder) and " +
@@ -153,6 +154,13 @@ export function createShortcutsModule(
 
 		defineTool({
 			name: "run_shortcut",
+			effect: "external",
+			// The shortcut name is an identifier; input text is content (length only).
+			auditTarget: (a) => ({
+				shortcut: a.name,
+				inputLen: a.input?.length,
+				inputPath: a.inputPath,
+			}),
 			description:
 				"Run an Apple Shortcut by name or identifier, optionally with text input ('input') " +
 				"or a file as input ('inputPath'), and capture its output (text is returned " +
@@ -264,6 +272,7 @@ export function createShortcutsModule(
 
 		defineTool({
 			name: "view_shortcut",
+			effect: "read",
 			description:
 				"Open a shortcut in the Shortcuts app editor (UI side effect: launches/foregrounds " +
 				"Shortcuts and shows the shortcut; it does not run it). Accepts a name or " +
