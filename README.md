@@ -97,7 +97,7 @@ hard to misuse:
 
 - macOS (tested on macOS 27). Apple Silicon or Intel.
 - [Bun](https://bun.sh) to build: `brew install oven-sh/bun/bun`
-- Node.js to run the built server. For the background service use the
+- Node.js 20 or newer to run the built server. For the background service use the
   [nodejs.org](https://nodejs.org) installer, not Homebrew (see
   [macOS permissions](#macos-permissions)).
 

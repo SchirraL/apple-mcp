@@ -7,6 +7,13 @@ import { getOrCreateToken, servicePort } from "./lib/service-config.js";
 // The registry is imported dynamically so a bad APPLE_MCP_APPS fails with a one-line error.
 
 async function main(): Promise<void> {
+	const major = Number(process.versions.node.split(".")[0]);
+	if (major < 20) {
+		throw new Error(
+			`node ${process.version} is too old; apple-mcp needs node >= 20 ` +
+				`(running ${process.execPath}). Install the nodejs.org LTS.`,
+		);
+	}
 	if (process.argv.includes("--doctor")) {
 		const { runDoctor, formatReport } = await import("./tools/doctor/handler.js");
 		const report = await runDoctor();

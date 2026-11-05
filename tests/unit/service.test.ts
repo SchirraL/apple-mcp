@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+	nodeVersionOk,
 	unknownArgs,
 	claudeCodeCommand,
 	collectPlistEnv,
@@ -187,5 +188,15 @@ describe("unknownArgs", () => {
 		expect(unknownArgs("doctor", ["--pinned", "--json"])).toEqual([]);
 		expect(unknownArgs("uninstall", ["--purge"])).toEqual([]);
 		expect(unknownArgs("install", ["--yes"])).toEqual(["--yes"]);
+	});
+});
+
+describe("nodeVersionOk", () => {
+	test("requires node 20+ (global Web Crypto for the MCP SDK)", () => {
+		expect(nodeVersionOk("v18.13.0")).toBe(false);
+		expect(nodeVersionOk("v19.9.0")).toBe(false);
+		expect(nodeVersionOk("v20.0.0")).toBe(true);
+		expect(nodeVersionOk("v26.12.0\n")).toBe(true);
+		expect(nodeVersionOk("garbage")).toBe(false);
 	});
 });

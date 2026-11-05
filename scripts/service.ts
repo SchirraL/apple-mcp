@@ -206,8 +206,9 @@ export async function verifyNodeCopy(file: string): Promise<void> {
 	} catch (error) {
 		throw new Error(`code signature invalid after copy: ${(error as Error).message}`);
 	}
+	let version: string;
 	try {
-		await run(file, ["--version"], { timeout: 15_000 });
+		version = (await run(file, ["--version"], { timeout: 15_000 })).stdout.trim();
 	} catch (error) {
 		throw new Error(
 			"the copy does not run on its own (Homebrew's node loads libnode and other " +
@@ -215,6 +216,20 @@ export async function verifyNodeCopy(file: string): Promise<void> {
 				`Use a self-contained node, e.g. the nodejs.org installer: ${(error as Error).message}`,
 		);
 	}
+	if (!nodeVersionOk(version)) {
+		throw new Error(
+			`node ${version} is too old: the server needs node >= ${MIN_NODE_MAJOR} ` +
+				"(the MCP SDK uses the global Web Crypto API). Install the nodejs.org LTS.",
+		);
+	}
+}
+
+export const MIN_NODE_MAJOR = 20;
+
+/** True for `v20.0.0` and later. */
+export function nodeVersionOk(version: string): boolean {
+	const major = Number(/^v?(\d+)\./.exec(version.trim())?.[1]);
+	return Number.isInteger(major) && major >= MIN_NODE_MAJOR;
 }
 
 export function claudeCodeCommand(url: string, token: string): string {
@@ -387,7 +402,16 @@ async function writePlistAndStart(nodePath: string): Promise<number> {
 	const names = Object.keys(envVars);
 	console.log(`Wrote ${PLIST_PATH} (node: ${nodePath}; env: ${names.join(", ") || "none"})`);
 	await launchctl("bootout", target()); // ignore failure: may not be loaded
-	const boot = await launchctl("bootstrap", domain(), PLIST_PATH);
+	// bootout returns before the job is gone; bootstrapping too early fails with
+	// "Bootstrap failed: 5: Input/output error". Wait for it, then retry a few times.
+	for (let i = 0; i < 20 && (await launchctl("print", target())).ok; i++) {
+		await new Promise((r) => setTimeout(r, 250));
+	}
+	let boot = await launchctl("bootstrap", domain(), PLIST_PATH);
+	for (let i = 0; i < 3 && !boot.ok; i++) {
+		await new Promise((r) => setTimeout(r, 1000));
+		boot = await launchctl("bootstrap", domain(), PLIST_PATH);
+	}
 	if (!boot.ok) {
 		console.error(`launchctl bootstrap failed:\n${boot.out}`);
 		return 1;

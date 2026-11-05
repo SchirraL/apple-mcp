@@ -19,6 +19,9 @@
 		"mail",
 		"claude"
 	],
+	"engines": {
+		"node": ">=20"
+	},
 	"bin": {
 		"apple-mcp": "./dist/index.js"
 	},
