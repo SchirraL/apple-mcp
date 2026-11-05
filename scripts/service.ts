@@ -26,6 +26,7 @@ import {
 	servicePort,
 	serviceUrl,
 } from "../src/lib/service-config.js";
+import { parseClientApps } from "../src/registry.js";
 import { doctorBridge } from "../src/tools/doctor/bridge.js";
 import { type DoctorReport, formatReport, runDoctor } from "../src/tools/doctor/handler.js";
 
@@ -234,14 +235,15 @@ export function nodeVersionOk(version: string): boolean {
 
 export function claudeCodeCommand(url: string, token: string): string {
 	return (
-		`claude mcp add --transport http --scope user apple-mcp ${url} ` +
+		`claude mcp add --transport http --scope user apple-mcp "${url}" ` +
 		`--header "Authorization: Bearer ${token}"`
 	);
 }
 
-export function desktopConfig(nodePath: string, bridgePath: string): string {
+export function desktopConfig(nodePath: string, bridgePath: string, apps?: string): string {
+	const args = apps ? [bridgePath, "--apps", apps] : [bridgePath];
 	return JSON.stringify(
-		{ mcpServers: { "apple-mcp": { command: nodePath, args: [bridgePath] } } },
+		{ mcpServers: { "apple-mcp": { command: nodePath, args } } },
 		null,
 		2,
 	);
@@ -531,13 +533,20 @@ function logs(): number {
 	return 0;
 }
 
-async function printConfig(): Promise<number> {
+async function printConfig(args: string[]): Promise<number> {
+	// --apps a,b: this client loads only those apps' tools (fewer tokens in its context).
+	const raw = flagValue(args, "--apps");
+	const apps = raw ? parseClientApps(raw)?.join(",") : undefined;
+	const url = apps ? `${serviceUrl()}?apps=${apps}` : serviceUrl();
 	const token = getOrCreateToken();
 	const nodePath = existsSync(PINNED_NODE) ? PINNED_NODE : ((await nodeCandidates())[0] ?? "node");
 	console.log("# Claude Code");
-	console.log(claudeCodeCommand(serviceUrl(), token));
+	console.log(claudeCodeCommand(url, token));
 	console.log("\n# Claude Desktop (claude_desktop_config.json) — bridge reads the token itself");
-	console.log(desktopConfig(nodePath, BRIDGE));
+	console.log(desktopConfig(nodePath, BRIDGE, apps));
+	if (!apps) {
+		console.log("\n# Tip: --apps reminders,calendar,… limits a client to those apps' tools.");
+	}
 	return 0;
 }
 
@@ -568,6 +577,7 @@ const FLAGS: Record<string, { bool: string[]; value: string[] }> = {
 	"update-node": { bool: ["--yes"], value: ["--node"] },
 	doctor: { bool: ["--pinned", "--json"], value: [] },
 	uninstall: { bool: ["--purge"], value: [] },
+	"print-config": { bool: [], value: ["--apps"] },
 };
 
 /** Arguments a command doesn't accept (e.g. --help), so they never reach an install. */
@@ -605,7 +615,7 @@ async function main(): Promise<number> {
 		case "logs":
 			return logs();
 		case "print-config":
-			return printConfig();
+			return printConfig(rest);
 		default:
 			return usage();
 	}
@@ -614,7 +624,7 @@ async function main(): Promise<number> {
 function usage(): number {
 	console.error(
 		"Usage: service.ts <install [--node <path>] | update-node [--node <path>] --yes |\n" +
-			"  uninstall [--purge] | status | restart | logs | print-config |\n" +
+			"  uninstall [--purge] | status | restart | logs | print-config [--apps a,b] |\n" +
 			"  doctor [--pinned] [--json]>",
 	);
 	return 2;

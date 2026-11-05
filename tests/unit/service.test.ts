@@ -80,13 +80,20 @@ describe("stabiliseNodePath", () => {
 describe("config and parsing helpers", () => {
 	test("claudeCodeCommand", () => {
 		expect(claudeCodeCommand("http://127.0.0.1:1/mcp", "tok")).toBe(
-			'claude mcp add --transport http --scope user apple-mcp http://127.0.0.1:1/mcp ' +
+			'claude mcp add --transport http --scope user apple-mcp "http://127.0.0.1:1/mcp" ' +
 				'--header "Authorization: Bearer tok"',
 		);
 	});
 	test("desktopConfig has no token", () => {
 		const cfg = JSON.parse(desktopConfig("/n", "/b.js"));
 		expect(cfg.mcpServers["apple-mcp"]).toEqual({ command: "/n", args: ["/b.js"] });
+	});
+	test("desktopConfig passes --apps to the bridge", () => {
+		const cfg = JSON.parse(desktopConfig("/n", "/b.js", "reminders,calendar"));
+		expect(cfg.mcpServers["apple-mcp"].args).toEqual(["/b.js", "--apps", "reminders,calendar"]);
+	});
+	test("claudeCodeCommand quotes a URL with ?apps= (zsh would glob the ?)", () => {
+		expect(claudeCodeCommand("http://h/mcp?apps=notes", "t")).toContain('"http://h/mcp?apps=notes"');
 	});
 	test("summariseLaunchctl", () => {
 		const out = "x = {\n\tstate = running\n\tpid = 123\n\tlast exit code = 0\n}";

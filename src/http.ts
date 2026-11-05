@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { enabledApps, registeredTools } from "./registry.js";
+import { enabledApps, parseClientApps, registeredTools } from "./registry.js";
 import { createMcpServer, VERSION } from "./server.js";
 import { HEALTH_PATH, HOST, MCP_PATH } from "./lib/service-config.js";
 
@@ -72,9 +72,24 @@ function readBody(req: IncomingMessage): Promise<unknown> {
 	});
 }
 
-async function handleMcp(req: IncomingMessage, res: ServerResponse): Promise<void> {
+/** `?apps=a,b` → that client's app subset; throws (status 400) on unknown/disabled apps. */
+export function clientAppsFromUrl(url: string | undefined): string[] | undefined {
+	const raw = new URL(url ?? "/", "http://localhost").searchParams.get("apps");
+	if (raw === null) return undefined;
+	try {
+		return parseClientApps(raw);
+	} catch (error) {
+		throw Object.assign(new Error((error as Error).message), { status: 400 });
+	}
+}
+
+async function handleMcp(
+	req: IncomingMessage,
+	res: ServerResponse,
+	clientApps: string[] | undefined,
+): Promise<void> {
 	// Stateless: one server + transport per request. Tool modules are shared and cheap.
-	const server = createMcpServer();
+	const server = createMcpServer(clientApps);
 	const transport = new StreamableHTTPServerTransport({
 		sessionIdGenerator: undefined,
 		enableJsonResponse: true,
@@ -108,7 +123,7 @@ export function startHttpServer(opts: HttpOptions): Promise<void> {
 				res.writeHead(405, { Allow: "POST" }).end();
 				return;
 			}
-			await handleMcp(req, res);
+			await handleMcp(req, res, clientAppsFromUrl(req.url));
 		} catch (error) {
 			const status = (error as { status?: number }).status ?? 500;
 			if (status === 500) console.error("[http]", error);

@@ -108,7 +108,10 @@ rebinding), any browser `Origin` refused, bearer token from
 `~/Library/Application Support/apple-mcp/token` (0600; never in the plist or logs).
 `GET /health` is unauthenticated (reports version, tool count, enabled apps).
 `APPLE_MCP_APPS` (comma-separated module names, unset = all) limits which apps register;
-unknown names fail at startup. The LaunchAgent `io.schirra.apple-mcp` starts it at login
+unknown names fail at startup. Per client: `/mcp?apps=a,b` (bridge: `--apps a,b`) limits
+that client's tool list AND callable tools to a subset of the enabled apps (always-on doctor/
+audit included); unknown or disabled apps → HTTP 400. See `toolsFor`/`toolAllowed` in
+registry.ts. Measured: 81 tools ≈ 17k tokens; reminders+calendar ≈ 2.5k. The LaunchAgent `io.schirra.apple-mcp` starts it at login
 and restarts it on crash; logs in `~/Library/Logs/apple-mcp/`. After code changes:
 `bun run build && bun run service restart`.
 Under launchd, macOS privacy permissions belong to the **node binary** (Full Disk Access,

@@ -193,6 +193,27 @@ config contains no secret:
 
 Without the service, point `args` at `dist/index.js` instead.
 
+### Load only the apps a client needs
+
+Claude Desktop puts every tool definition into the context, about 17k tokens for all 81
+tools. Each client can ask for just the apps it uses, from the same service:
+
+| Client asks for | Tools | ~Tokens |
+|---|---|---|
+| all apps | 81 | 17,000 |
+| `notes,mail,reminders,calendar` | 30 | 5,800 |
+| `reminders,calendar` | 13 | 2,500 |
+
+- **Claude Desktop:** add `"--apps", "reminders,calendar,notes,mail"` after the bridge path
+  in `args`.
+- **HTTP clients:** append `?apps=reminders,calendar,notes,mail` to the URL.
+- `bun run service print-config --apps reminders,calendar,notes,mail` prints both.
+
+Tools of other apps are then hidden and can't be called by that client. The doctor and audit
+tools are always included. Claude Code loads tool definitions on demand, so it usually doesn't
+need this. `APPLE_MCP_APPS` (below) limits the whole service; a client can only pick from
+those apps.
+
 > If you also use another Mac MCP server with overlapping tools (for example LMCP), disable
 > it. Otherwise the client may call the wrong one.
 
@@ -240,7 +261,7 @@ written into the LaunchAgent, except `APPLE_MCP_TOKEN`, which never is.
 | `APPLE_MCP_FILE_ROOTS` | `$HOME` | Colon-separated folders the file tools may access |
 | `APPLE_MCP_FILE_DENY` | (built-in list) | Extra colon-separated folders to block |
 | `APPLE_MCP_SHORTCUTS_ALLOW` | (none) | Comma-separated shortcut names or ids that may run without confirmation |
-| `APPLE_MCP_APPS` | all | Comma-separated apps to enable, e.g. `reminders,calendar,notes`. Fewer apps means fewer tools in the client's context (all 81 tools take about 15k tokens). Names: `reminders`, `calendar`, `notes`, `messages`, `contacts`, `maps`, `mail`, `pdf`, `files`, `finder`, `shortcuts`, `music`, `obsidian`. The doctor and audit tools are always on |
+| `APPLE_MCP_APPS` | all | Comma-separated apps to enable, e.g. `reminders,calendar,notes`. Limits the whole service; to slim down one client, see [Load only the apps a client needs](#load-only-the-apps-a-client-needs). Names: `reminders`, `calendar`, `notes`, `messages`, `contacts`, `maps`, `mail`, `pdf`, `files`, `finder`, `shortcuts`, `music`, `obsidian`. The doctor and audit tools are always on |
 | `APPLE_MCP_AUDIT_LOG` | `~/Library/Logs/apple-mcp/audit.jsonl` | Audit log location |
 
 ## Development

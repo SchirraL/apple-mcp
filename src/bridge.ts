@@ -166,8 +166,19 @@ export function parseLine(line: string): JsonRpcMessage | null {
 	}
 }
 
+/** Service URL, plus `?apps=` when started with `--apps a,b` (load only those apps' tools). */
+export function bridgeUrl(argv: string[], base: string = serviceUrl()): string {
+	const i = argv.indexOf("--apps");
+	const apps = i >= 0 ? argv[i + 1] : undefined;
+	if (i >= 0 && (!apps || apps.startsWith("--"))) {
+		throw new Error("--apps needs a comma-separated list, e.g. --apps reminders,calendar");
+	}
+	return apps ? `${base}?apps=${encodeURIComponent(apps)}` : base;
+}
+
 function run(): void {
 	const token = getOrCreateToken();
+	const url = bridgeUrl(process.argv.slice(2));
 	const state: SessionState = {};
 	const rl = createInterface({ input: process.stdin });
 	// Chain keeps ordering without blocking stdin reading.
@@ -177,7 +188,7 @@ function run(): void {
 		if (!message) return;
 		chain = chain.then(async () => {
 			try {
-				for (const out of await forward(message, token, state)) {
+				for (const out of await forward(message, token, state, url)) {
 					process.stdout.write(`${JSON.stringify(out)}\n`);
 				}
 			} catch (error) {

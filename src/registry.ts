@@ -74,20 +74,66 @@ export function selectApps(env: NodeJS.ProcessEnv = process.env): string[] {
 export const enabledApps: string[] = selectApps();
 
 const enabled = new Set(enabledApps);
-const modules: ToolModule[] = [
-	...alwaysOn,
-	...apps.filter((a) => enabled.has(a.name)).map((a) => a.create()),
+/** app === null: always-on module (doctor, audit), visible to every client. */
+const built: { app: string | null; module: ToolModule }[] = [
+	...alwaysOn.map((module) => ({ app: null, module })),
+	...apps.filter((a) => enabled.has(a.name)).map((a) => ({ app: a.name, module: a.create() })),
 ];
 
 const owner = new Map<string, ToolModule>();
-for (const m of modules) {
-	for (const t of m.tools) {
+const appOf = new Map<string, string | null>();
+for (const { app, module } of built) {
+	for (const t of module.tools) {
 		if (owner.has(t.name)) throw new Error(`Duplicate tool name: ${t.name}`);
-		owner.set(t.name, m);
+		owner.set(t.name, module);
+		appOf.set(t.name, app);
 	}
 }
 
-export const registeredTools: Tool[] = modules.flatMap((m) => m.tools);
+export const registeredTools: Tool[] = built.flatMap((b) => b.module.tools);
+
+/**
+ * A client's own app subset (e.g. `?apps=reminders,calendar` on the HTTP endpoint), so each
+ * client loads only the tool definitions it needs. Must be within the server's enabled apps
+ * (APPLE_MCP_APPS is the ceiling). Empty → undefined (= all enabled apps).
+ */
+export function parseClientApps(raw: string): string[] | undefined {
+	const requested = [
+		...new Set(
+			raw
+				.split(",")
+				.map((s) => s.trim().toLowerCase())
+				.filter((s) => s.length > 0),
+		),
+	];
+	if (requested.length === 0) return undefined;
+	const valid = apps.map((a) => a.name);
+	const unknown = requested.filter((n) => !valid.includes(n));
+	if (unknown.length > 0) {
+		throw new Error(`Unknown app(s): ${unknown.join(", ")}. Valid: ${valid.join(", ")}`);
+	}
+	const disabled = requested.filter((n) => !enabled.has(n));
+	if (disabled.length > 0) {
+		throw new Error(
+			`App(s) not enabled on this server: ${disabled.join(", ")}. ` +
+				`Enabled (APPLE_MCP_APPS): ${enabledApps.join(", ")}`,
+		);
+	}
+	return requested;
+}
+
+/** True if `name` is visible to a client limited to `clientApps` (undefined = all). */
+export function toolAllowed(name: string, clientApps?: readonly string[]): boolean {
+	if (!appOf.has(name)) return false;
+	const app = appOf.get(name) ?? null;
+	return clientApps === undefined || app === null || clientApps.includes(app);
+}
+
+/** Tool definitions for a client limited to `clientApps` (undefined = all enabled). */
+export function toolsFor(clientApps?: readonly string[]): Tool[] {
+	if (clientApps === undefined) return registeredTools;
+	return registeredTools.filter((t) => toolAllowed(t.name, clientApps));
+}
 
 export function hasTool(name: string): boolean {
 	return owner.has(name);
