@@ -16,9 +16,6 @@ export function createTestDataManager(): TestDataManager {
       console.log("Setting up test notes folder...");
       await setupTestNotesFolder();
       
-      console.log("Setting up test reminders list...");
-      await setupTestRemindersList();
-      
       console.log("Setting up test calendar...");
       await setupTestCalendar();
     },
@@ -26,9 +23,6 @@ export function createTestDataManager(): TestDataManager {
     async cleanupTestData() {
       console.log("Cleaning up test notes...");
       await cleanupTestNotes();
-      
-      console.log("Cleaning up test reminders...");
-      await cleanupTestReminders();
       
       console.log("Cleaning up test calendar events...");
       await cleanupTestCalendarEvents();
@@ -81,26 +75,6 @@ end tell`;
     await runAppleScript(script);
   } catch (error) {
     console.warn("Could not set up test notes folder:", error);
-  }
-}
-
-async function setupTestRemindersList(): Promise<void> {
-  try {
-    const script = `
-tell application "Reminders"
-    set existingLists to (every list whose name is "${TEST_DATA.REMINDERS.listName}")
-    
-    if (count of existingLists) is 0 then
-        make new list with properties {name:"${TEST_DATA.REMINDERS.listName}"}
-        return "Created test reminders list"
-    else
-        return "Test reminders list already exists"
-    end if
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not set up test reminders list:", error);
   }
 }
 
@@ -158,25 +132,6 @@ end tell`;
     await runAppleScript(script);
   } catch (error) {
     console.warn("Could not clean up test notes:", error);
-  }
-}
-
-async function cleanupTestReminders(): Promise<void> {
-  try {
-    const script = `
-tell application "Reminders"
-    set testLists to (every list whose name is "${TEST_DATA.REMINDERS.listName}")
-    
-    repeat with testList in testLists
-        delete testList
-    end repeat
-    
-    return "Test reminders cleaned up"
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not clean up test reminders:", error);
   }
 }
 

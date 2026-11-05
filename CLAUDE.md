@@ -80,6 +80,12 @@ paths. Creating new items (note, reminder, draft) does not need confirmation.
 ## Gotchas
 - macOS TCC: first run of each app triggers an Automation prompt for the *host* process
   (Terminal, Claude, etc.). Messages history needs Full Disk Access (reads `chat.db`).
-- AppleScript against Mail/Notes is slow; prefer JXA or narrow `whose` filters and limits.
+- App scripting dictionaries can be pathologically slow (Reminders: 46s for one 500-item
+  list). Prefer the native framework via JXA's ObjC bridge (`ObjC.import("EventKit")`) —
+  see `src/tools/reminders/bridge.ts` (~0.2s). Measure before choosing.
+- JXA/ObjC bridge traps: JS `null` becomes NSNull (use `$()` for nil); JS arrays of ObjC
+  objects don't convert back to NSArray; enum/status values come back as strings (`Number()`).
+- Functions passed to `runJxa` are serialised with `toString()` and must be self-contained.
+  Verify against the minified build (`bun run build` → `node dist/index.js`), not just dev.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

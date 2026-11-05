@@ -130,52 +130,6 @@ const CONTACTS_TOOL: Tool = {
     }
   };
   
-  const REMINDERS_TOOL: Tool = {
-    name: "reminders",
-    description: "Search, create, and open reminders in Apple Reminders app",
-    inputSchema: {
-      type: "object",
-      properties: {
-        operation: {
-          type: "string",
-          description: "Operation to perform: 'list', 'search', 'open', 'create', or 'listById'",
-          enum: ["list", "search", "open", "create", "listById"]
-        },
-        searchText: {
-          type: "string",
-          description: "Text to search for in reminders (required for search and open operations)"
-        },
-        name: {
-          type: "string",
-          description: "Name of the reminder to create (required for create operation)"
-        },
-        listName: {
-          type: "string",
-          description: "Name of the list to create the reminder in (optional for create operation)"
-        },
-        listId: {
-          type: "string",
-          description: "ID of the list to get reminders from (required for listById operation)"
-        },
-        props: {
-          type: "array",
-          items: {
-            type: "string"
-          },
-          description: "Properties to include in the reminders (optional for listById operation)"
-        },
-        notes: {
-          type: "string",
-          description: "Additional notes for the reminder (optional for create operation)"
-        },
-        dueDate: {
-          type: "string",
-          description: "Due date for the reminder in ISO format (optional for create operation)"
-        }
-      },
-      required: ["operation"]
-    }
-  };
   
   
 const CALENDAR_TOOL: Tool = {
@@ -291,6 +245,6 @@ const MAPS_TOOL: Tool = {
   }
 };
 
-const tools = [CONTACTS_TOOL, NOTES_TOOL, MESSAGES_TOOL, MAIL_TOOL, REMINDERS_TOOL, CALENDAR_TOOL, MAPS_TOOL];
+const tools = [CONTACTS_TOOL, NOTES_TOOL, MESSAGES_TOOL, MAIL_TOOL, CALENDAR_TOOL, MAPS_TOOL];
 
 export default tools;
