@@ -69,6 +69,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 	return toolModule([
 		defineTool({
 			name: "music_now_playing",
+			effect: "read",
 			description:
 				"Apple Music player state: current track (name, artist, album, duration and " +
 				"position in seconds), volume 0-100, shuffle and repeat. Does not launch Music; " +
@@ -83,6 +84,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_play",
+			effect: "write",
 			description:
 				AUDIO +
 				"Starts audio in Apple Music (launches Music if needed). With no arguments it " +
@@ -143,6 +145,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_pause",
+			effect: "write",
 			description: AUDIO + "Pauses Apple Music playback. Fails if Music is not running.",
 			schema: z.object({}),
 			async run() {
@@ -153,6 +156,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_next_track",
+			effect: "write",
 			description: AUDIO + "Skips to the next track in Apple Music.",
 			schema: z.object({}),
 			async run() {
@@ -163,6 +167,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_previous_track",
+			effect: "write",
 			description:
 				AUDIO + "Goes to the previous track (or the start of the current one) in Apple Music.",
 			schema: z.object({}),
@@ -174,6 +179,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_set_volume",
+			effect: "write",
 			description:
 				AUDIO +
 				"Sets the Music app volume: level is absolute 0-100, delta is relative (e.g. -10, " +
@@ -196,6 +202,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_search_library",
+			effect: "read",
 			description:
 				"Search the LOCAL Apple Music library (not the streaming catalog) by text in " +
 				"name, artist or album. kind track returns songs with persistent ids (use them " +
@@ -216,6 +223,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_list_playlists",
+			effect: "read",
 			description:
 				"List Apple Music user playlists with id and track count. Smart playlists, " +
 				"folders and system playlists are skipped unless includeAll is true.",
@@ -228,6 +236,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_add_to_playlist",
+			effect: "write",
 			description:
 				"Add library tracks (by persistent id) to an existing user playlist. Additive, " +
 				"no confirmation needed. Smart, folder and system playlists cannot be targeted.",
@@ -247,6 +256,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_create_playlist",
+			effect: "write",
 			description:
 				"Create a new empty user playlist in Apple Music, optionally with initial " +
 				"tracks. No confirmation needed.",
@@ -267,6 +277,7 @@ export function createMusicModule(bridge: MusicBridge = musicBridge): ToolModule
 
 		defineTool({
 			name: "music_remove_from_playlist",
+			effect: "write",
 			description:
 				"Remove tracks from a user playlist (the tracks stay in the library). " +
 				"Requires confirm: true; otherwise returns a preview of what would be removed.",

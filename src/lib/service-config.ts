@@ -44,3 +44,8 @@ export function getOrCreateToken(env: NodeJS.ProcessEnv = process.env): string {
 	chmodSync(TOKEN_FILE, 0o600);
 	return token;
 }
+
+// Pinned node runtime. macOS privacy permissions (TCC) are bound to the binary that runs the
+// service, so the service uses a private copy that package-manager upgrades cannot replace.
+export const RUNTIME_DIR = join(CONFIG_DIR, "runtime");
+export const PINNED_NODE = join(RUNTIME_DIR, "node");

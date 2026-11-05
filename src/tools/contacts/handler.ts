@@ -78,6 +78,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 	return toolModule([
 		defineTool({
 			name: "search_contacts",
+			effect: "read",
 			description:
 				"Search Apple Contacts by name, organisation, nickname, email or phone number " +
 				"(case-insensitive; all words must match). Returns id, name, organisation, " +
@@ -95,6 +96,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 
 		defineTool({
 			name: "get_contact",
+			effect: "read",
 			description:
 				"Get one contact in full: all phones and emails with labels, postal addresses, " +
 				"organisation, job title, birthday and URLs. The note field is not available.",
@@ -107,6 +109,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 
 		defineTool({
 			name: "list_contacts",
+			effect: "read",
 			description:
 				"List contacts sorted by name, one page at a time. Use offset to page through; " +
 				"the summary line shows the total.",
@@ -126,6 +129,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 
 		defineTool({
 			name: "find_contact_by_phone",
+			effect: "read",
 			description:
 				"Find who a phone number belongs to. Matches regardless of formatting and " +
 				'country prefix, so "+49 171 1234567" finds a contact stored as "0171 1234567".',
@@ -146,6 +150,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 
 		defineTool({
 			name: "create_contact",
+			effect: "write",
 			description:
 				"Create a new contact in the default account. Needs at least a name or an " +
 				"organisation. Birthday as YYYY-MM-DD (or --MM-DD).",
@@ -183,6 +188,7 @@ export function createContactsModule(bridge: ContactsBridge = contactsBridge): T
 
 		defineTool({
 			name: "update_contact",
+			effect: "write",
 			description:
 				"Change a contact. Adding phones/emails/urls (addPhones, addEmails, addUrls) " +
 				"or filling an empty field applies immediately; changing or clearing a field " +

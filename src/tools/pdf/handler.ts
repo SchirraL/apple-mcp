@@ -46,6 +46,7 @@ export function createPdfModule(bridge: PdfBridge = pdfBridge): ToolModule {
 	return toolModule([
 		defineTool({
 			name: "read_pdf",
+			effect: "read",
 			description:
 				"Extract the text of a PDF file, page by page, with '--- Page N ---' markers and " +
 				"the total page count. Use fromPage/toPage (1-based) to read a range. Output is " +
@@ -149,6 +150,7 @@ export function createPdfModule(bridge: PdfBridge = pdfBridge): ToolModule {
 
 		defineTool({
 			name: "get_pdf_info",
+			effect: "read",
 			description:
 				"Get PDF metadata without reading the full text: page count, title, author, " +
 				"subject, keywords, creator, producer, creation/modification dates, encrypted " +
@@ -169,6 +171,7 @@ export function createPdfModule(bridge: PdfBridge = pdfBridge): ToolModule {
 
 		defineTool({
 			name: "search_pdf",
+			effect: "read",
 			description:
 				"Case-insensitive plain-text search inside one PDF. Returns page numbers with " +
 				"short context snippets (one entry per occurrence), up to `limit`. Use read_pdf " +

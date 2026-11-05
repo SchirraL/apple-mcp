@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { registeredTools } from "./registry.js";
+import { enabledApps, registeredTools } from "./registry.js";
 import { createMcpServer, VERSION } from "./server.js";
 import { HEALTH_PATH, HOST, MCP_PATH } from "./lib/service-config.js";
 
@@ -93,7 +93,12 @@ export function startHttpServer(opts: HttpOptions): Promise<void> {
 		const path = (req.url ?? "/").split("?")[0];
 		try {
 			if (path === HEALTH_PATH && req.method === "GET") {
-				return sendJson(res, 200, { ok: true, version: VERSION, tools: registeredTools.length });
+				return sendJson(res, 200, {
+					ok: true,
+					version: VERSION,
+					tools: registeredTools.length,
+					apps: enabledApps,
+				});
 			}
 			if (path !== MCP_PATH) return sendJson(res, 404, { error: "Not found" });
 			const denied = checkRequest(req.headers, opts.port, opts.token);

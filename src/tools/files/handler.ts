@@ -52,6 +52,7 @@ export function createFilesModule(
 	return toolModule([
 		defineTool({
 			name: "list_files",
+			effect: "read",
 			description:
 				"List files and folders in a directory (default: home). Returns path, name, type " +
 				"(file/dir/symlink), size in bytes and modified time; folders first, then by name. " +
@@ -85,6 +86,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "get_file_info",
+			effect: "read",
 			description:
 				"Get metadata for a file or folder: type, kind, size, created/modified dates, " +
 				"permissions and symlink target (shown only if the target is an allowed location).",
@@ -103,6 +105,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "read_file",
+			effect: "read",
 			description:
 				"Read a text file (lines offset/limit, output capped at ~100 KB). Also extracts " +
 				"plain text from .docx .doc .rtf .rtfd .odt .html .webarchive. Binary files are " +
@@ -163,6 +166,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "write_file",
+			effect: "write",
 			description:
 				"Write text to a file. mode 'create' (default) fails if the file exists; " +
 				"'append' adds to the end; 'overwrite' replaces an existing file and needs " +
@@ -217,6 +221,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "create_folder",
+			effect: "write",
 			description: "Create a folder (and missing parents). No-op if it already exists.",
 			schema: z.object({ path: pathField("Folder path") }),
 			async run(a) {
@@ -231,6 +236,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "move_file",
+			effect: "write",
 			description:
 				"Move or rename a file or folder. If the destination already exists it would be " +
 				"replaced, which needs confirm: true (preview first). Destination is the full new " +
@@ -275,6 +281,7 @@ export function createFilesModule(
 
 		defineTool({
 			name: "trash_file",
+			effect: "write",
 			description:
 				"Move a file or folder to the Trash (recoverable from Finder). Always requires " +
 				"confirm: true; without it you get a preview. Nothing is ever permanently deleted.",

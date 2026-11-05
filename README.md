@@ -2,7 +2,8 @@
 
 A local [MCP](https://modelcontextprotocol.io) server that gives Claude (and other MCP
 clients) access to the apps on your Mac: Reminders, Calendar, Notes, Messages, Contacts,
-Mail, Maps, Files & Finder, PDFs, Shortcuts, Music and Obsidian. 79 tools across 12 apps.
+Mail, Maps, Files & Finder, PDFs, Shortcuts, Music and Obsidian. 79 tools across 12 apps,
+plus a permissions doctor and an audit log.
 Everything runs on your machine. No cloud relay, no account, no subscription.
 
 This is a fork of [dhravya/apple-mcp](https://github.com/dhravya/apple-mcp) by Dhravya Shah,
@@ -43,6 +44,7 @@ when called again with `confirm: true`.
 | Shortcuts | `list_shortcuts`, `run_shortcut` ✋, `view_shortcut` | `shortcuts` CLI |
 | Music | `music_now_playing`, `music_play`, `music_pause`, `music_next_track`, `music_previous_track`, `music_set_volume`, `music_search_library`, `music_list_playlists`, `music_add_to_playlist`, `music_create_playlist`, `music_remove_from_playlist` ✋ | Music scripting |
 | Obsidian | `obsidian_list_vaults`, `obsidian_list_notes`, `obsidian_search_notes`, `obsidian_read_note`, `obsidian_write_note` ✋, `obsidian_daily_note`, `obsidian_open_note` | vault files |
+| Server | `apple_mcp_doctor`, `get_audit_log` (always on) | — |
 
 For some tools ✋ applies only in certain cases:
 - **Overwrites:** `update_note` replacing a body or touching a note that is shared or has
@@ -79,6 +81,15 @@ hard to misuse:
   - **Symlinks** are resolved before checking.
   - **No permanent delete:** `trash_file` moves things to the Trash.
   - **Obsidian** writes can't reach `.obsidian/` (plugins).
+- **Audit log.** Every call that changes or sends something (including previews) is logged
+  as one JSON line in `~/Library/Logs/apple-mcp/audit.jsonl`: time, tool, confirmed or
+  previewed, outcome, and identifiers such as ids, paths and recipients. Message and email
+  bodies, subjects, titles and note content are never logged, only their lengths; user input
+  echoed in error messages is redacted. Rotates at 5 MB. Ask Claude to "show the audit log"
+  (`get_audit_log`).
+- **Tool annotations.** Every tool declares whether it is read-only, destructive or reaches
+  outside your Mac (MCP `readOnlyHint` / `destructiveHint` / `openWorldHint`), so clients can
+  auto-approve reads and ask before the rest.
 - **Service mode is locked down.** It listens on `127.0.0.1` only, requires a random bearer
   token, rejects foreign `Host` headers (DNS rebinding) and refuses requests from browsers.
 
@@ -86,7 +97,9 @@ hard to misuse:
 
 - macOS (tested on macOS 27). Apple Silicon or Intel.
 - [Bun](https://bun.sh) to build: `brew install oven-sh/bun/bun`
-- Node.js to run the built server: `brew install node`
+- Node.js to run the built server. For the background service use the
+  [nodejs.org](https://nodejs.org) installer, not Homebrew (see
+  [macOS permissions](#macos-permissions)).
 
 ## Install
 
@@ -107,8 +120,11 @@ Runs one shared instance at login, restarted automatically if it crashes.
 bun run service install
 ```
 
-This creates the LaunchAgent `io.schirra.apple-mcp`, which serves MCP over HTTP on
-`127.0.0.1:47823`. It also creates a bearer token in
+This copies node to `~/Library/Application Support/apple-mcp/runtime/node` and creates the
+LaunchAgent `io.schirra.apple-mcp`, which runs that copy and serves MCP over HTTP on
+`127.0.0.1:47823`. Pass `--node <path>` to choose which node is copied; Homebrew's node can't
+be copied (it depends on Homebrew's other libraries), so install will tell you to use the
+nodejs.org build. It also creates a bearer token in
 `~/Library/Application Support/apple-mcp/token`. Manage it with:
 
 ```bash
@@ -116,6 +132,8 @@ bun run service status        # launchd state + health check
 bun run service restart       # e.g. after `bun run build`
 bun run service logs          # ~/Library/Logs/apple-mcp/
 bun run service print-config  # ready-to-paste client setup
+bun run service doctor        # which permissions are granted (never prompts)
+bun run service update-node --node <path> --yes  # replace the pinned node
 bun run service uninstall     # add --purge to also delete the token
 ```
 
@@ -168,8 +186,8 @@ Without the service, point `args` at `dist/index.js` instead.
 
 macOS asks once per app. Grant them to the process that runs the server:
 
-- **Service mode:** the `node` binary (`/opt/homebrew/bin/node`). In the file picker it
-  resolves to a path like `/opt/homebrew/Cellar/node/<version>/bin/node`.
+- **Service mode:** the pinned node, `~/Library/Application Support/apple-mcp/runtime/node`
+  (in the file picker press ⌘⇧G and paste the path).
 - **stdio mode:** the client app, such as your terminal or Claude.
 
 | Permission (System Settings → Privacy & Security) | Needed for |
@@ -180,14 +198,21 @@ macOS asks once per app. Grant them to the process that runs the server:
 | Contacts | Contacts |
 | Automation → Notes, Mail, Messages, Music, Finder | writing and app control |
 
-If a tool fails with a permission message, it names the exact setting. After a
-`brew upgrade node` you may have to grant the permissions again, because they are tied to the
-node binary. Then run `bun run service restart`.
+To see what is granted, ask Claude to run `apple_mcp_doctor` (the service's own view), or run
+`bun run service doctor` (the view of your terminal). Neither ever triggers a permission prompt
+or launches an app. Each denied permission comes with the exact setting to change.
+
+Why the pinned copy: macOS ties permissions to the binary's code signature. Homebrew's node is
+signed per build, so every `brew upgrade node` silently revoked them. The service now runs its
+own copy, which upgrades can't touch. The nodejs.org build is signed by the Node.js project,
+so permissions are expected to carry over when you replace it with `service update-node`
+(the command still warns you to check, and `doctor` shows the result).
 
 ## Configuration
 
-All configuration is through environment variables. For the service, set them in the
-LaunchAgent: `APPLE_MCP_PORT` is picked up at `service install` time.
+All configuration is through environment variables. For the service, export them before
+`bun run service install` (or `update-node`): every `APPLE_MCP_*` variable set at that time is
+written into the LaunchAgent, except `APPLE_MCP_TOKEN`, which never is.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -196,6 +221,8 @@ LaunchAgent: `APPLE_MCP_PORT` is picked up at `service install` time.
 | `APPLE_MCP_FILE_ROOTS` | `$HOME` | Colon-separated folders the file tools may access |
 | `APPLE_MCP_FILE_DENY` | (built-in list) | Extra colon-separated folders to block |
 | `APPLE_MCP_SHORTCUTS_ALLOW` | (none) | Comma-separated shortcut names or ids that may run without confirmation |
+| `APPLE_MCP_APPS` | all | Comma-separated apps to enable, e.g. `reminders,calendar,notes`. Fewer apps means fewer tools in the client's context (all 81 tools take about 15k tokens). Names: `reminders`, `calendar`, `notes`, `messages`, `contacts`, `maps`, `mail`, `pdf`, `files`, `finder`, `shortcuts`, `music`, `obsidian`. The doctor and audit tools are always on |
+| `APPLE_MCP_AUDIT_LOG` | `~/Library/Logs/apple-mcp/audit.jsonl` | Audit log location |
 
 ## Development
 

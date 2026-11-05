@@ -162,6 +162,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 	return toolModule([
 		defineTool({
 			name: "search_files",
+			effect: "read",
 			description:
 				"Search files and folders with macOS Spotlight. 'query' matches file names and file " +
 				"contents (all words must match); set nameOnly to match names only. '*' in the query is " +
@@ -199,6 +200,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 
 		defineTool({
 			name: "list_recent_files",
+			effect: "read",
 			description:
 				"List files and folders the user opened or used recently (Spotlight last-used date), " +
 				"newest-modified first. Defaults to the last 7 days.",
@@ -221,6 +223,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 
 		defineTool({
 			name: "get_finder_selection",
+			effect: "read",
 			description:
 				"Read-only: the paths currently selected in the frontmost Finder window, plus the " +
 				"folder that window shows. Empty when nothing is selected or no window is open. " +
@@ -242,6 +245,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 
 		defineTool({
 			name: "reveal_in_finder",
+			effect: "write",
 			description:
 				"UI side effect: opens a Finder window showing the file or folder, selects it and " +
 				"brings Finder to the front. Use only when the user wants to see it in Finder.",
@@ -257,6 +261,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 
 		defineTool({
 			name: "get_file_tags",
+			effect: "read",
 			description: "Read the Finder tags (e.g. 'Red', 'Work') of a file or folder.",
 			schema: z.object({ path: pathField }),
 			async run({ path }) {
@@ -270,6 +275,7 @@ export function createFinderModule(bridge: FinderBridge = finderBridge): ToolMod
 
 		defineTool({
 			name: "set_file_tags",
+			effect: "write",
 			description:
 				"Change the Finder tags of a file or folder. mode 'add' (default) adds tags and needs " +
 				"no confirmation; 'remove' removes the given tags and 'replace' sets exactly the " +

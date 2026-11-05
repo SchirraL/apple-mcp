@@ -15,6 +15,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 	return toolModule([
 		defineTool({
 			name: "list_reminder_lists",
+			effect: "read",
 			description: "List all Apple Reminders lists with their number of open reminders.",
 			schema: z.object({}),
 			async run() {
@@ -25,6 +26,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 
 		defineTool({
 			name: "list_reminders",
+			effect: "read",
 			description:
 				"List or search Apple Reminders, sorted by due date (undated last). Filters " +
 				"combine. By default only open (not completed) reminders are returned.",
@@ -44,6 +46,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 
 		defineTool({
 			name: "create_reminder",
+			effect: "write",
 			description: "Create a reminder in Apple Reminders. Uses the default list if none given.",
 			schema: z.object({
 				name: z.string().trim().min(1).describe("Reminder title"),
@@ -60,6 +63,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 
 		defineTool({
 			name: "update_reminder",
+			effect: "write",
 			description:
 				"Change fields of an existing reminder. Only the fields given are changed; pass " +
 				"null for notes or dueDate to clear them.",
@@ -83,6 +87,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 
 		defineTool({
 			name: "complete_reminder",
+			effect: "write",
 			description: "Mark a reminder as completed (or reopen it with completed: false).",
 			schema: z.object({ id: reminderId, completed: z.boolean().default(true) }),
 			async run({ id, completed }) {
@@ -93,6 +98,7 @@ export function createRemindersModule(bridge: RemindersBridge = remindersBridge)
 
 		defineTool({
 			name: "delete_reminder",
+			effect: "write",
 			description: "Permanently delete a reminder. Requires confirm: true; otherwise previews.",
 			schema: z.object({ id: reminderId, confirm: confirmField }),
 			async run({ id, confirm }) {

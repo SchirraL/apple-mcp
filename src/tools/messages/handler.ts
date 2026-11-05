@@ -32,6 +32,7 @@ export function createMessagesModule(bridge: MessagesBridge = messagesBridge): T
 	return toolModule([
 		defineTool({
 			name: "list_message_chats",
+			effect: "read",
 			description:
 				"List recent Messages (iMessage/SMS) conversations, newest first: chat id, display " +
 				"name (groups), participant handles, last message date and unread count. Use the " +
@@ -46,6 +47,7 @@ export function createMessagesModule(bridge: MessagesBridge = messagesBridge): T
 
 		defineTool({
 			name: "read_messages",
+			effect: "read",
 			description:
 				"Read messages of one conversation, newest first. Identify it by chatId (from " +
 				"list_message_chats) or by handle (phone number or email, one-to-one chats only). " +
@@ -80,6 +82,7 @@ export function createMessagesModule(bridge: MessagesBridge = messagesBridge): T
 
 		defineTool({
 			name: "search_messages",
+			effect: "read",
 			description:
 				"Search message text (case-insensitive substring) across all chats or within one " +
 				"chat, newest first. Scans the most recent ~5000 messages.",
@@ -101,6 +104,7 @@ export function createMessagesModule(bridge: MessagesBridge = messagesBridge): T
 
 		defineTool({
 			name: "list_unread_messages",
+			effect: "read",
 			description: "List unread incoming messages across all chats, newest first.",
 			schema: z.object({ limit: z.number().int().min(1).max(100).default(20) }),
 			async run({ limit }) {
@@ -111,6 +115,7 @@ export function createMessagesModule(bridge: MessagesBridge = messagesBridge): T
 
 		defineTool({
 			name: "send_message",
+			effect: "external",
 			description:
 				"Send an iMessage/SMS via the Messages app to a handle (phone number or email) " +
 				"or an existing chat (chatId, needed for group chats). Provide exactly one of " +

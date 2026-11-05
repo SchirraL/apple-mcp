@@ -71,6 +71,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 	return toolModule([
 		defineTool({
 			name: "list_email_accounts",
+			effect: "read",
 			description: "List the accounts configured in Apple Mail, with their email addresses.",
 			schema: z.object({}),
 			async run() {
@@ -81,6 +82,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "list_email_folders",
+			effect: "read",
 			description:
 				"List Apple Mail folders (mailboxes) with unread and total message counts, " +
 				"optionally for one account.",
@@ -93,6 +95,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "list_emails",
+			effect: "read",
 			description:
 				"List emails in a folder, newest first, with sender, date, read/flagged state and " +
 				"a short snippet. Defaults to the INBOX of all accounts. Use read_email for the full " +
@@ -117,6 +120,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "search_emails",
+			effect: "read",
 			description:
 				"Search emails, newest first. Each word of query must appear (case-insensitive) in " +
 				"the subject, sender name/address or the message preview text; full bodies are not " +
@@ -147,6 +151,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "read_email",
+			effect: "read",
 			description:
 				"Read one email in full: plain-text body, recipients (to/cc) and attachment names.",
 			schema: z.object({ id: emailId }),
@@ -158,6 +163,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "create_draft",
+			effect: "write",
 			description:
 				"Save a new email as a draft in Apple Mail's Drafts folder without sending it and " +
 				"without opening a compose window. No confirmation needed. It lands in the Drafts " +
@@ -175,6 +181,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "send_email",
+			effect: "external",
 			description:
 				"Send a new email. Requires confirm: true; without it only a preview of " +
 				"from/to/cc/bcc/subject/body is returned and nothing is sent.",
@@ -194,6 +201,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "reply_email",
+			effect: "external",
 			description:
 				"Reply to an email. By default only saves a reply DRAFT (quoting the original) " +
 				"that the user can review in Mail. With send: true the reply is sent, which " +
@@ -224,6 +232,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "move_email",
+			effect: "write",
 			description:
 				"Move an email to another folder of its account (use list_email_folders for names; " +
 				'"Account/Folder" targets another account). The id stays valid. Moving to ' +
@@ -259,6 +268,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "mark_email_read",
+			effect: "write",
 			description: "Mark an email as read (default) or unread.",
 			schema: z.object({ id: emailId, read: z.boolean().default(true) }),
 			async run({ id, read }) {
@@ -269,6 +279,7 @@ export function createMailModule(bridge: MailBridge = mailBridge): ToolModule {
 
 		defineTool({
 			name: "flag_email",
+			effect: "write",
 			description: "Flag (default) or unflag an email.",
 			schema: z.object({ id: emailId, flagged: z.boolean().default(true) }),
 			async run({ id, flagged }) {
