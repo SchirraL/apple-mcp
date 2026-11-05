@@ -47,6 +47,18 @@ export const AUTOMATION_TARGETS: { id: string; app: string; bundle: string }[] =
 const grantFix = (pane: string, host: string): string =>
 	`${SETTINGS} → ${pane} → enable ${host}`;
 
+/**
+ * Calendars, Reminders, Contacts and Automation have no "+" in System Settings: a binary is
+ * only listed after it has asked. The doctor never asks, so tell the user how to trigger it.
+ */
+function askFirst(tool: string): string {
+	return (
+		`not listed in System Settings until asked: call ${tool} once through the service and ` +
+		"click Allow on the macOS prompt (the call may time out while the prompt is open; " +
+		"call it again)"
+	);
+}
+
 type Mapped = Pick<Check, "status" | "detail" | "fix">;
 
 /** EventKit status (macOS 14+): 0 notDetermined, 1 restricted, 2 denied, 3 full, 4 write-only. */
@@ -80,7 +92,7 @@ export function mapEventKitStatus(
 			return {
 				status: "not_determined",
 				detail: "never asked for this host; the doctor does not prompt",
-				fix: `${fix} (it appears after the first ${pane.toLowerCase()} tool call prompts)`,
+				fix: askFirst(pane === "Calendars" ? "list_calendars" : "list_reminder_lists"),
 			};
 		default:
 			return { status: "unknown", detail: `unexpected authorization status ${value}` };
@@ -106,7 +118,7 @@ export function mapContactsStatus(value: number, host: string): Mapped {
 			return {
 				status: "not_determined",
 				detail: "never asked for this host; the doctor does not prompt",
-				fix: `${fix} (it appears after the first contacts tool call prompts)`,
+				fix: askFirst("list_contacts"),
 			};
 		default:
 			return { status: "unknown", detail: `unexpected authorization status ${value}` };
@@ -125,7 +137,7 @@ export function mapAutomationCode(code: number, app: string, host: string): Mapp
 			return {
 				status: "not_determined",
 				detail: "would require user consent; the doctor does not prompt",
-				fix: `${fix} (it appears after the first ${app} tool call prompts)`,
+				fix: askFirst(`a ${app} tool that controls the app`),
 			};
 		case -600:
 			return {

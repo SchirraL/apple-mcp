@@ -164,5 +164,11 @@ stdio-only clients (Claude Desktop); it reads the token itself.
 - Tool names are global: Obsidian tools are `obsidian_*`, Music `music_*` (registry throws on
   duplicates). Obsidian refuses dot-segments in note paths so writes can't reach
   `.obsidian/plugins`.
+- TCC for a launchd binary: only Full Disk Access has a "+" button. Calendars, Reminders,
+  Contacts and Automation list the binary only after its first request, so after
+  `service install`/`update-node` call list_calendars, list_reminder_lists, list_contacts
+  through the service and click Allow. The 15s bridge timeout fires while the prompt is open
+  — the second call succeeds. Running the pinned node from a terminal won't help (TCC
+  attributes it to the terminal).
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

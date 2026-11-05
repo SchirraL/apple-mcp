@@ -198,6 +198,11 @@ macOS asks once per app. Grant them to the process that runs the server:
 | Contacts | Contacts |
 | Automation → Notes, Mail, Messages, Music, Finder | writing and app control |
 
+Only Full Disk Access can be added by hand (the "+" button). Calendars, Reminders, Contacts
+and Automation list the node binary only after it has asked once. After installing the
+service, ask Claude to list your calendars, reminder lists and contacts, and click **Allow** on
+each macOS prompt. The first call may time out while the prompt is open; just ask again.
+
 To see what is granted, ask Claude to run `apple_mcp_doctor` (the service's own view), or run
 `bun run service doctor` (the view of your terminal). Neither ever triggers a permission prompt
 or launches an app. Each denied permission comes with the exact setting to change.
