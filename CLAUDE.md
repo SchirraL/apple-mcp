@@ -129,6 +129,16 @@ to the terminal (responsible process), so only the MCP tool via the service show
 service's real view. `dist/bridge.js` is a stdio⇄HTTP bridge for
 stdio-only clients (Claude Desktop); it reads the token itself.
 
+## Menu bar app (`menubar/`)
+SwiftUI `MenuBarExtra` (LSUIElement, ad-hoc signed, bundle id `io.schirra.apple-mcp.menubar`),
+built by `bun run menubar <build|install|uninstall|open>` with plain `swiftc` (no Xcode
+project; CI compiles it). It only talks to the service: GET /health every 10 s, the
+`apple_mcp_doctor` tool via POST /mcp with the token read per call (never logged), audit.jsonl
+for recent activity, `launchctl` for restart/stop/start (Stop asks first). Down notification
+after 2 failed polls, suppressed for Stop/Restart from the menu; UserNotifications with an
+`osascript` fallback. Debug: `AppleMCPMenu --dump-state`, `--test-notify`. Login item via
+SMAppService.
+
 ## Clients
 - Claude Code: registered via `.mcp.json` in this repo as `apple-mcp-dev` (runs `src/index.ts`).
 - Claude Desktop: `dist/bridge.js` → service (see `bun run service print-config`), or stdio
