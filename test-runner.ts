@@ -5,7 +5,6 @@ import { spawn } from "bun";
 const testCommands = {
   "contacts": "bun test tests/integration/contacts-simple.test.ts --preload ./tests/setup.ts",
   "messages": "bun test tests/integration/messages.test.ts --preload ./tests/setup.ts", 
-  "notes": "bun test tests/integration/notes.test.ts --preload ./tests/setup.ts",
   "mail": "bun test tests/integration/mail.test.ts --preload ./tests/setup.ts",
   "maps": "bun test tests/integration/maps.test.ts --preload ./tests/setup.ts",
   "web-search": "bun test tests/integration/web-search.test.ts --preload ./tests/setup.ts",

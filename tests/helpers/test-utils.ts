@@ -12,16 +12,9 @@ export function createTestDataManager(): TestDataManager {
     async setupTestData() {
       console.log("Setting up test contacts...");
       await setupTestContact();
-      
-      console.log("Setting up test notes folder...");
-      await setupTestNotesFolder();
-      
     },
 
     async cleanupTestData() {
-      console.log("Cleaning up test notes...");
-      await cleanupTestNotes();
-      
       // Note: We don't clean up contacts as they might be useful to keep
       console.log("Leaving test contact for manual cleanup if needed");
     }
@@ -50,63 +43,6 @@ end tell`;
     await runAppleScript(script);
   } catch (error) {
     console.warn("Could not set up test contact:", error);
-  }
-}
-
-async function setupTestNotesFolder(): Promise<void> {
-  try {
-    const script = `
-tell application "Notes"
-    set existingFolders to (every folder whose name is "${TEST_DATA.NOTES.folderName}")
-    
-    if (count of existingFolders) is 0 then
-        make new folder with properties {name:"${TEST_DATA.NOTES.folderName}"}
-        return "Created test notes folder"
-    else
-        return "Test notes folder already exists"
-    end if
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not set up test notes folder:", error);
-  }
-}
-
-// Cleanup functions
-async function cleanupTestNotes(): Promise<void> {
-  try {
-    const script = `
-tell application "Notes"
-    set testFolders to (every folder whose name is "${TEST_DATA.NOTES.folderName}")
-    
-    repeat with testFolder in testFolders
-        try
-            -- Delete all notes in the folder first
-            set folderNotes to notes of testFolder
-            repeat with noteItem in folderNotes
-                delete noteItem
-            end repeat
-            
-            -- Then delete the folder
-            delete testFolder
-        on error
-            -- Folder deletion might fail, just clear notes
-            try
-                set folderNotes to notes of testFolder
-                repeat with noteItem in folderNotes
-                    delete noteItem
-                end repeat
-            end try
-        end try
-    end repeat
-    
-    return "Test notes cleaned up"
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not clean up test notes:", error);
   }
 }
 

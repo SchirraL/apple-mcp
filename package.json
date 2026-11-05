@@ -32,7 +32,6 @@
 		"test:contacts": "bun run test-runner.ts contacts",
 		"test:contacts-full": "bun test tests/integration/contacts.test.ts --preload ./tests/setup.ts",
 		"test:messages": "bun test tests/integration/messages.test.ts --preload ./tests/setup.ts",
-		"test:notes": "bun test tests/integration/notes.test.ts --preload ./tests/setup.ts",
 		"test:mail": "bun test tests/integration/mail.test.ts --preload ./tests/setup.ts",
 		"test:maps": "bun test tests/integration/maps.test.ts --preload ./tests/setup.ts",
 		"test:web-search": "bun test tests/integration/web-search.test.ts --preload ./tests/setup.ts",

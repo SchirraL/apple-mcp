@@ -80,12 +80,32 @@
 			"description": "Permanently delete a calendar event. Requires confirm: true; otherwise previews. For recurring events pass occurrenceStart and choose span."
 		},
 		{
-			"name": "contacts",
-			"description": "Search and retrieve contacts from Apple Contacts app"
+			"name": "list_note_folders",
+			"description": "List all Apple Notes folders with their account and note count."
 		},
 		{
-			"name": "notes",
-			"description": "Search, retrieve and create notes in Apple Notes app"
+			"name": "list_notes",
+			"description": "List Apple Notes, sorted by last modified, newest first. Returns snippets only; use read_note for the full text."
+		},
+		{
+			"name": "read_note",
+			"description": "Read one Apple Note in full (plain text, optionally raw HTML). Locked (password-protected) notes return no text."
+		},
+		{
+			"name": "create_note",
+			"description": "Create an Apple Note. With format text the body is converted line by line; the title becomes the note's heading. Uses the default folder if none is given."
+		},
+		{
+			"name": "update_note",
+			"description": "Change an existing note. title renames it, body REPLACES everything below the title, append adds to the end (body and append are mutually exclusive). Requires confirm: true (otherwise previews) when replacing the body or when the note has attachments or is shared; renaming or appending to a plain note applies directly."
+		},
+		{
+			"name": "delete_note",
+			"description": "Delete a note (moves it to \"Recently Deleted\"). Requires confirm: true; otherwise previews."
+		},
+		{
+			"name": "contacts",
+			"description": "Search and retrieve contacts from Apple Contacts app"
 		},
 		{
 			"name": "messages",

@@ -22,7 +22,7 @@ Current (upstream) layout, to be migrated:
 - `utils/<app>.ts` — AppleScript/JXA per app (contacts, notes, message, mail, reminders,
   calendar, maps, web-search)
 
-Target layout (refactor in progress — one app at a time; done: reminders, calendar. Until
+Target layout (refactor in progress — one app at a time; done: reminders, calendar, notes. Until
 all are moved, `index.ts` stays at the root, asks `src/registry.ts` first, and falls back to
 the legacy switch):
 ```
@@ -90,5 +90,8 @@ paths. Creating new items (note, reminder, draft) does not need confirmation.
   Verify against the minified build (`bun run build` → `node dist/index.js`), not just dev.
 - Recurring calendar events share one id; EventKit resolves a bare id to the series' FIRST
   occurrence. Writes to recurring events therefore require `occurrenceStart`.
+- Notes: content is HTML; rewriting `body` can drop attachments, and shared notes change for
+  others — such writes are confirm-gated. "Recently Deleted" is a normal folder to scripting
+  (only listed when non-empty), recognised by localised name and hidden by default.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

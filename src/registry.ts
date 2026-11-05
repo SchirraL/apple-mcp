@@ -1,10 +1,15 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult, ToolModule } from "./lib/types.js";
 import { createCalendarModule } from "./tools/calendar/handler.js";
+import { createNotesModule } from "./tools/notes/handler.js";
 import { createRemindersModule } from "./tools/reminders/handler.js";
 
 /** Migrated apps. Add a module here — nothing else needs editing. */
-const modules: ToolModule[] = [createRemindersModule(), createCalendarModule()];
+const modules: ToolModule[] = [
+	createRemindersModule(),
+	createCalendarModule(),
+	createNotesModule(),
+];
 
 const owner = new Map<string, ToolModule>();
 for (const m of modules) {

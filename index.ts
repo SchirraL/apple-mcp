@@ -19,7 +19,6 @@ console.error("Starting apple-mcp server...");
 
 // Placeholders for modules - will either be loaded eagerly or lazily
 let contacts: typeof import("./utils/contacts").default | null = null;
-let notes: typeof import("./utils/notes").default | null = null;
 let message: typeof import("./utils/message").default | null = null;
 let mail: typeof import("./utils/mail").default | null = null;
 
@@ -28,7 +27,6 @@ let maps: typeof import("./utils/maps").default | null = null;
 // Type map for module names to their types
 type ModuleMap = {
 	contacts: typeof import("./utils/contacts").default;
-	notes: typeof import("./utils/notes").default;
 	message: typeof import("./utils/message").default;
 	mail: typeof import("./utils/mail").default;
 	maps: typeof import("./utils/maps").default;
@@ -38,7 +36,6 @@ type ModuleMap = {
 async function loadModule<
 	T extends
 		| "contacts"
-		| "notes"
 		| "message"
 		| "mail"
 		| "maps",
@@ -52,9 +49,6 @@ async function loadModule<
 			case "contacts":
 				if (!contacts) contacts = (await import("./utils/contacts")).default;
 				return contacts as ModuleMap[T];
-			case "notes":
-				if (!notes) notes = (await import("./utils/notes")).default;
-				return notes as ModuleMap[T];
 			case "message":
 				if (!message) message = (await import("./utils/message")).default;
 				return message as ModuleMap[T];
@@ -83,7 +77,6 @@ loadingTimeout = setTimeout(() => {
 
 	// Clear the references to any modules that might be in a bad state
 	contacts = null;
-	notes = null;
 	message = null;
 	mail = null;
 
@@ -99,9 +92,6 @@ async function attemptEagerLoading() {
 		// Try to import all modules
 		contacts = (await import("./utils/contacts")).default;
 		console.error("- Contacts module loaded successfully");
-
-		notes = (await import("./utils/notes")).default;
-		console.error("- Notes module loaded successfully");
 
 		message = (await import("./utils/message")).default;
 		console.error("- Message module loaded successfully");
@@ -139,7 +129,6 @@ async function attemptEagerLoading() {
 
 		// Clear the references to any modules that might be in a bad state
 		contacts = null;
-		notes = null;
 		message = null;
 		mail = null;
 		maps = null;
@@ -250,99 +239,6 @@ function initServer() {
 								{
 									type: "text",
 									text: errorMessage.includes("access") ? errorMessage : `Error accessing contacts: ${errorMessage}`,
-								},
-							],
-							isError: true,
-						};
-					}
-				}
-
-				case "notes": {
-					if (!isNotesArgs(args)) {
-						throw new Error("Invalid arguments for notes tool");
-					}
-
-					try {
-						const notesModule = await loadModule("notes");
-						const { operation } = args;
-
-						switch (operation) {
-							case "search": {
-								if (!args.searchText) {
-									throw new Error(
-										"Search text is required for search operation",
-									);
-								}
-
-								const foundNotes = await notesModule.findNote(args.searchText);
-								return {
-									content: [
-										{
-											type: "text",
-											text: foundNotes.length
-												? foundNotes
-														.map((note) => `${note.name}:\n${note.content}`)
-														.join("\n\n")
-												: `No notes found for "${args.searchText}"`,
-										},
-									],
-									isError: false,
-								};
-							}
-
-							case "list": {
-								const allNotes = await notesModule.getAllNotes();
-								return {
-									content: [
-										{
-											type: "text",
-											text: allNotes.length
-												? allNotes
-														.map((note) => `${note.name}:\n${note.content}`)
-														.join("\n\n")
-												: "No notes exist.",
-										},
-									],
-									isError: false,
-								};
-							}
-
-							case "create": {
-								if (!args.title || !args.body) {
-									throw new Error(
-										"Title and body are required for create operation",
-									);
-								}
-
-								const result = await notesModule.createNote(
-									args.title,
-									args.body,
-									args.folderName,
-								);
-
-								return {
-									content: [
-										{
-											type: "text",
-											text: result.success
-												? `Created note "${args.title}" in folder "${result.folderName}"${result.usedDefaultFolder ? " (created new folder)" : ""}.`
-												: `Failed to create note: ${result.message}`,
-										},
-									],
-									isError: !result.success,
-								};
-							}
-
-							default:
-								throw new Error(`Unknown operation: ${operation}`);
-						}
-					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error);
-						return {
-							content: [
-								{
-									type: "text",
-									text: errorMessage.includes("access") ? errorMessage : `Error accessing notes: ${errorMessage}`,
 								},
 							],
 							isError: true,
@@ -1045,53 +941,6 @@ function isContactsArgs(args: unknown): args is { name?: string } {
 		args !== null &&
 		(!("name" in args) || typeof (args as { name: string }).name === "string")
 	);
-}
-
-function isNotesArgs(args: unknown): args is {
-	operation: "search" | "list" | "create";
-	searchText?: string;
-	title?: string;
-	body?: string;
-	folderName?: string;
-} {
-	if (typeof args !== "object" || args === null) {
-		return false;
-	}
-
-	const { operation } = args as { operation?: unknown };
-	if (typeof operation !== "string") {
-		return false;
-	}
-
-	if (!["search", "list", "create"].includes(operation)) {
-		return false;
-	}
-
-	// Validate fields based on operation
-	if (operation === "search") {
-		const { searchText } = args as { searchText?: unknown };
-		if (typeof searchText !== "string" || searchText === "") {
-			return false;
-		}
-	}
-
-	if (operation === "create") {
-		const { title, body } = args as { title?: unknown; body?: unknown };
-		if (typeof title !== "string" || title === "" || typeof body !== "string") {
-			return false;
-		}
-
-		// Check folderName if provided
-		const { folderName } = args as { folderName?: unknown };
-		if (
-			folderName !== undefined &&
-			(typeof folderName !== "string" || folderName === "")
-		) {
-			return false;
-		}
-	}
-
-	return true;
 }
 
 function isMessagesArgs(args: unknown): args is {

@@ -8,19 +8,6 @@ export const TEST_DATA = {
 		phoneNumber: "+1 9999999999",
 	},
 
-	// Test note data
-	NOTES: {
-		folderName: "Test-Claude",
-		testNote: {
-			title: "Claude Test Note",
-			body: "This is a test note created by Claude for testing purposes. Please do not delete manually.",
-		},
-		searchTestNote: {
-			title: "Search Test Note",
-			body: "This note contains the keyword SEARCHABLE for testing search functionality.",
-		},
-	},
-
 	// Test mail data
 	MAIL: {
 		testSubject: "Claude MCP Test Email",

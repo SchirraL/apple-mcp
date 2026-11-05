@@ -14,38 +14,6 @@ const CONTACTS_TOOL: Tool = {
     }
   };
   
-  const NOTES_TOOL: Tool = {
-    name: "notes", 
-    description: "Search, retrieve and create notes in Apple Notes app",
-    inputSchema: {
-      type: "object",
-      properties: {
-        operation: {
-          type: "string",
-          description: "Operation to perform: 'search', 'list', or 'create'",
-          enum: ["search", "list", "create"]
-        },
-        searchText: {
-          type: "string",
-          description: "Text to search for in notes (required for search operation)"
-        },
-        title: {
-          type: "string",
-          description: "Title of the note to create (required for create operation)"
-        },
-        body: {
-          type: "string",
-          description: "Content of the note to create (required for create operation)"
-        },
-        folderName: {
-          type: "string",
-          description: "Name of the folder to create the note in (optional for create operation, defaults to 'Claude')"
-        }
-      },
-      required: ["operation"]
-    }
-  };
-  
   const MESSAGES_TOOL: Tool = {
     name: "messages",
     description: "Interact with Apple Messages app - send, read, schedule messages and check unread messages",
@@ -179,6 +147,6 @@ const MAPS_TOOL: Tool = {
   }
 };
 
-const tools = [CONTACTS_TOOL, NOTES_TOOL, MESSAGES_TOOL, MAIL_TOOL, MAPS_TOOL];
+const tools = [CONTACTS_TOOL, MESSAGES_TOOL, MAIL_TOOL, MAPS_TOOL];
 
 export default tools;
