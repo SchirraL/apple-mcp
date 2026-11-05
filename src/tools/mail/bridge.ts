@@ -522,8 +522,16 @@ function mailScript(a: MailOp): unknown {
 			const m = find(a.loc);
 			const r = app.reply(m, { openingWindow: false, replyToAll: a.o.replyAll });
 			r.content = a.o.body + "\n\n" + String(r.content());
-			if (a.o.send) r.send();
-			else r.save();
+			if (a.o.send) {
+				r.send();
+			} else {
+				r.save();
+				// Mail ignores openingWindow:false for replies on current macOS. Closing the
+				// compose window (not the outgoing message, which is a no-op) keeps the draft.
+				const subject = String(r.subject());
+				delay(0.5);
+				for (const w of app.windows.whose({ name: subject })()) w.close({ saving: "yes" });
+			}
 			return { sent: a.o.send };
 		}
 	}
