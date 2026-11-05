@@ -89,6 +89,12 @@ function eventKitReminders(a: Op): unknown {
 		spin(() => answered, 120);
 		status = Number($.EKEventStore.authorizationStatusForEntityType($.EKEntityTypeReminder));
 	}
+	if (status === 4) {
+		throw new Error(
+			"Only write access to Reminders was granted, reading needs Full Access. Change it in " +
+				"System Settings > Privacy & Security > Reminders for the app running this server.",
+		);
+	}
 	if (status !== 3) {
 		throw new Error(
 			"No full access to Reminders. Enable it in System Settings > Privacy & Security > " +

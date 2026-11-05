@@ -16,16 +16,11 @@ export function createTestDataManager(): TestDataManager {
       console.log("Setting up test notes folder...");
       await setupTestNotesFolder();
       
-      console.log("Setting up test calendar...");
-      await setupTestCalendar();
     },
 
     async cleanupTestData() {
       console.log("Cleaning up test notes...");
       await cleanupTestNotes();
-      
-      console.log("Cleaning up test calendar events...");
-      await cleanupTestCalendarEvents();
       
       // Note: We don't clean up contacts as they might be useful to keep
       console.log("Leaving test contact for manual cleanup if needed");
@@ -78,26 +73,6 @@ end tell`;
   }
 }
 
-async function setupTestCalendar(): Promise<void> {
-  try {
-    const script = `
-tell application "Calendar"
-    set existingCalendars to (every calendar whose name is "${TEST_DATA.CALENDAR.calendarName}")
-    
-    if (count of existingCalendars) is 0 then
-        make new calendar with properties {name:"${TEST_DATA.CALENDAR.calendarName}"}
-        return "Created test calendar"
-    else
-        return "Test calendar already exists"
-    end if
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not set up test calendar:", error);
-  }
-}
-
 // Cleanup functions
 async function cleanupTestNotes(): Promise<void> {
   try {
@@ -132,31 +107,6 @@ end tell`;
     await runAppleScript(script);
   } catch (error) {
     console.warn("Could not clean up test notes:", error);
-  }
-}
-
-async function cleanupTestCalendarEvents(): Promise<void> {
-  try {
-    const script = `
-tell application "Calendar"
-    set testCalendars to (every calendar whose name is "${TEST_DATA.CALENDAR.calendarName}")
-    
-    repeat with testCalendar in testCalendars
-        try
-            delete testCalendar
-        on error
-            -- Calendar deletion might fail due to system restrictions
-            -- Just clear events instead
-            delete (every event of testCalendar)
-        end try
-    end repeat
-    
-    return "Test calendar cleaned up"
-end tell`;
-    
-    await runAppleScript(script);
-  } catch (error) {
-    console.warn("Could not clean up test calendar:", error);
   }
 }
 

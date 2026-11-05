@@ -8,9 +8,9 @@ kept clean enough to publish later.
 ## Commands
 - `bun install` — install deps (Bun via Homebrew: `brew install oven-sh/bun/bun`)
 - `bun run dev` — run the server on stdio (logs go to stderr; stdout is the MCP channel)
-- `bun run build` — bundle to `dist/index.js` (what Claude Desktop / the .dxt runs)
+- `bun run build` — sync `manifest.json` tools from the registry, then bundle to `dist/index.js`
 - `bun run typecheck` — `tsc --noEmit`
-- `bun run test:unit` — fast unit tests, no real apps touched (dir exists, no tests yet)
+- `bun run test:unit` — fast unit tests against fake bridges, no real apps touched
 - `bun run test` — integration tests against the REAL apps (creates notes/reminders/events;
   never run casually). TODO: gate behind `APPLE_MCP_INTEGRATION=1`
 - `bun run inspect` — MCP Inspector against the dev server for manual testing
@@ -22,7 +22,9 @@ Current (upstream) layout, to be migrated:
 - `utils/<app>.ts` — AppleScript/JXA per app (contacts, notes, message, mail, reminders,
   calendar, maps, web-search)
 
-Target layout (refactor in progress — move one app at a time, keep behaviour identical):
+Target layout (refactor in progress — one app at a time; done: reminders, calendar. Until
+all are moved, `index.ts` stays at the root, asks `src/registry.ts` first, and falls back to
+the legacy switch):
 ```
 src/
   index.ts            # server bootstrap + registry only
@@ -30,8 +32,7 @@ src/
   lib/applescript.ts  # shared runner: timeouts, escaping, error mapping
   lib/safety.ts       # confirm/dry-run helpers
   tools/<app>/
-    schema.ts         # input schema + type guards
-    handler.ts        # MCP-facing logic
+    handler.ts        # zod schemas (→ JSON schema) + MCP-facing logic; factory takes a bridge
     bridge.ts         # AppleScript/JXA calls (the only part that touches the OS)
 ```
 Each `tools/<app>` exports a `ToolModule { tools, handle }`; adding an app must not require
@@ -87,5 +88,7 @@ paths. Creating new items (note, reminder, draft) does not need confirmation.
   objects don't convert back to NSArray; enum/status values come back as strings (`Number()`).
 - Functions passed to `runJxa` are serialised with `toString()` and must be self-contained.
   Verify against the minified build (`bun run build` → `node dist/index.js`), not just dev.
+- Recurring calendar events share one id; EventKit resolves a bare id to the series' FIRST
+  occurrence. Writes to recurring events therefore require `occurrenceStart`.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

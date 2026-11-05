@@ -129,73 +129,7 @@ const CONTACTS_TOOL: Tool = {
       required: ["operation"]
     }
   };
-  
-  
-  
-const CALENDAR_TOOL: Tool = {
-  name: "calendar",
-  description: "Search, create, and open calendar events in Apple Calendar app",
-  inputSchema: {
-    type: "object",
-    properties: {
-      operation: {
-        type: "string",
-        description: "Operation to perform: 'search', 'open', 'list', or 'create'",
-        enum: ["search", "open", "list", "create"]
-      },
-      searchText: {
-        type: "string",
-        description: "Text to search for in event titles, locations, and notes (required for search operation)"
-      },
-      eventId: {
-        type: "string",
-        description: "ID of the event to open (required for open operation)"
-      },
-      limit: {
-        type: "number",
-        description: "Number of events to retrieve (optional, default 10)"
-      },
-      fromDate: {
-        type: "string",
-        description: "Start date for search range in ISO format (optional, default is today)"
-      },
-      toDate: {
-        type: "string",
-        description: "End date for search range in ISO format (optional, default is 30 days from now for search, 7 days for list)"
-      },
-      title: {
-        type: "string",
-        description: "Title of the event to create (required for create operation)"
-      },
-      startDate: {
-        type: "string",
-        description: "Start date/time of the event in ISO format (required for create operation)"
-      },
-      endDate: {
-        type: "string",
-        description: "End date/time of the event in ISO format (required for create operation)"
-      },
-      location: {
-        type: "string",
-        description: "Location of the event (optional for create operation)"
-      },
-      notes: {
-        type: "string",
-        description: "Additional notes for the event (optional for create operation)"
-      },
-      isAllDay: {
-        type: "boolean",
-        description: "Whether the event is an all-day event (optional for create operation, default is false)"
-      },
-      calendarName: {
-        type: "string",
-        description: "Name of the calendar to create the event in (optional for create operation, uses default calendar if not specified)"
-      }
-    },
-    required: ["operation"]
-  }
-};
-  
+
 const MAPS_TOOL: Tool = {
   name: "maps",
   description: "Search locations, manage guides, save favorites, and get directions using Apple Maps",
@@ -245,6 +179,6 @@ const MAPS_TOOL: Tool = {
   }
 };
 
-const tools = [CONTACTS_TOOL, NOTES_TOOL, MESSAGES_TOOL, MAIL_TOOL, CALENDAR_TOOL, MAPS_TOOL];
+const tools = [CONTACTS_TOOL, NOTES_TOOL, MESSAGES_TOOL, MAIL_TOOL, MAPS_TOOL];
 
 export default tools;

@@ -23,7 +23,6 @@ let notes: typeof import("./utils/notes").default | null = null;
 let message: typeof import("./utils/message").default | null = null;
 let mail: typeof import("./utils/mail").default | null = null;
 
-let calendar: typeof import("./utils/calendar").default | null = null;
 let maps: typeof import("./utils/maps").default | null = null;
 
 // Type map for module names to their types
@@ -32,7 +31,6 @@ type ModuleMap = {
 	notes: typeof import("./utils/notes").default;
 	message: typeof import("./utils/message").default;
 	mail: typeof import("./utils/mail").default;
-	calendar: typeof import("./utils/calendar").default;
 	maps: typeof import("./utils/maps").default;
 };
 
@@ -43,7 +41,6 @@ async function loadModule<
 		| "notes"
 		| "message"
 		| "mail"
-		| "calendar"
 		| "maps",
 >(moduleName: T): Promise<ModuleMap[T]> {
 	if (safeModeFallback) {
@@ -64,9 +61,6 @@ async function loadModule<
 			case "mail":
 				if (!mail) mail = (await import("./utils/mail")).default;
 				return mail as ModuleMap[T];
-			case "calendar":
-				if (!calendar) calendar = (await import("./utils/calendar")).default;
-				return calendar as ModuleMap[T];
 			case "maps":
 				if (!maps) maps = (await import("./utils/maps")).default;
 				return maps as ModuleMap[T];
@@ -92,7 +86,6 @@ loadingTimeout = setTimeout(() => {
 	notes = null;
 	message = null;
 	mail = null;
-	calendar = null;
 
 	// Proceed with server setup
 	initServer();
@@ -118,8 +111,6 @@ async function attemptEagerLoading() {
 
 
 
-		calendar = (await import("./utils/calendar")).default;
-		console.error("- Calendar module loaded successfully");
 
 		maps = (await import("./utils/maps")).default;
 		console.error("- Maps module loaded successfully");
@@ -151,7 +142,6 @@ async function attemptEagerLoading() {
 		notes = null;
 		message = null;
 		mail = null;
-			calendar = null;
 		maps = null;
 
 		// Initialize the server in safe mode
@@ -819,151 +809,6 @@ end tell`;
 					}
 				}
 
-				case "calendar": {
-					if (!isCalendarArgs(args)) {
-						throw new Error("Invalid arguments for calendar tool");
-					}
-
-					try {
-						const calendarModule = await loadModule("calendar");
-						const { operation } = args;
-
-						switch (operation) {
-							case "search": {
-								const { searchText, limit, fromDate, toDate } = args;
-								const events = await calendarModule.searchEvents(
-									searchText!,
-									limit,
-									fromDate,
-									toDate,
-								);
-
-								return {
-									content: [
-										{
-											type: "text",
-											text:
-												events.length > 0
-													? `Found ${events.length} events matching "${searchText}":\n\n${events
-															.map(
-																(event) =>
-																	`${event.title} (${new Date(event.startDate!).toLocaleString()} - ${new Date(event.endDate!).toLocaleString()})\n` +
-																	`Location: ${event.location || "Not specified"}\n` +
-																	`Calendar: ${event.calendarName}\n` +
-																	`ID: ${event.id}\n` +
-																	`${event.notes ? `Notes: ${event.notes}\n` : ""}`,
-															)
-															.join("\n\n")}`
-													: `No events found matching "${searchText}".`,
-										},
-									],
-									isError: false,
-								};
-							}
-
-							case "open": {
-								const { eventId } = args;
-								const result = await calendarModule.openEvent(eventId!);
-
-								return {
-									content: [
-										{
-											type: "text",
-											text: result.success
-												? result.message
-												: `Error opening event: ${result.message}`,
-										},
-									],
-									isError: !result.success,
-								};
-							}
-
-							case "list": {
-								const { limit, fromDate, toDate } = args;
-								const events = await calendarModule.getEvents(
-									limit,
-									fromDate,
-									toDate,
-								);
-
-								const startDateText = fromDate
-									? new Date(fromDate).toLocaleDateString()
-									: "today";
-								const endDateText = toDate
-									? new Date(toDate).toLocaleDateString()
-									: "next 7 days";
-
-								return {
-									content: [
-										{
-											type: "text",
-											text:
-												events.length > 0
-													? `Found ${events.length} events from ${startDateText} to ${endDateText}:\n\n${events
-															.map(
-																(event) =>
-																	`${event.title} (${new Date(event.startDate!).toLocaleString()} - ${new Date(event.endDate!).toLocaleString()})\n` +
-																	`Location: ${event.location || "Not specified"}\n` +
-																	`Calendar: ${event.calendarName}\n` +
-																	`ID: ${event.id}`,
-															)
-															.join("\n\n")}`
-													: `No events found from ${startDateText} to ${endDateText}.`,
-										},
-									],
-									isError: false,
-								};
-							}
-
-							case "create": {
-								const {
-									title,
-									startDate,
-									endDate,
-									location,
-									notes,
-									isAllDay,
-									calendarName,
-								} = args;
-								const result = await calendarModule.createEvent(
-									title!,
-									startDate!,
-									endDate!,
-									location,
-									notes,
-									isAllDay,
-									calendarName,
-								);
-								return {
-									content: [
-										{
-											type: "text",
-											text: result.success
-												? `${result.message} Event scheduled from ${new Date(startDate!).toLocaleString()} to ${new Date(endDate!).toLocaleString()}${result.eventId ? `\nEvent ID: ${result.eventId}` : ""}`
-												: `Error creating event: ${result.message}`,
-										},
-									],
-									isError: !result.success,
-								};
-							}
-
-							default:
-								throw new Error(`Unknown calendar operation: ${operation}`);
-						}
-					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error);
-						return {
-							content: [
-								{
-									type: "text",
-									text: errorMessage.includes("access") ? errorMessage : `Error in calendar tool: ${errorMessage}`,
-								},
-							],
-							isError: true,
-						};
-					}
-				}
-
 				case "maps": {
 					if (!isMapsArgs(args)) {
 						throw new Error("Invalid arguments for maps tool");
@@ -1362,68 +1207,6 @@ function isMailArgs(args: unknown): args is {
 }
 
 
-
-function isCalendarArgs(args: unknown): args is {
-	operation: "search" | "open" | "list" | "create";
-	searchText?: string;
-	eventId?: string;
-	limit?: number;
-	fromDate?: string;
-	toDate?: string;
-	title?: string;
-	startDate?: string;
-	endDate?: string;
-	location?: string;
-	notes?: string;
-	isAllDay?: boolean;
-	calendarName?: string;
-} {
-	if (typeof args !== "object" || args === null) {
-		return false;
-	}
-
-	const { operation } = args as { operation?: unknown };
-	if (typeof operation !== "string") {
-		return false;
-	}
-
-	if (!["search", "open", "list", "create"].includes(operation)) {
-		return false;
-	}
-
-	// Check that required parameters are present for each operation
-	if (operation === "search") {
-		const { searchText } = args as { searchText?: unknown };
-		if (typeof searchText !== "string") {
-			return false;
-		}
-	}
-
-	if (operation === "open") {
-		const { eventId } = args as { eventId?: unknown };
-		if (typeof eventId !== "string") {
-			return false;
-		}
-	}
-
-	if (operation === "create") {
-		const { title, startDate, endDate } = args as {
-			title?: unknown;
-			startDate?: unknown;
-			endDate?: unknown;
-		};
-
-		if (
-			typeof title !== "string" ||
-			typeof startDate !== "string" ||
-			typeof endDate !== "string"
-		) {
-			return false;
-		}
-	}
-
-	return true;
-}
 
 function isMapsArgs(args: unknown): args is {
 	operation:

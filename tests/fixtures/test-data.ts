@@ -21,25 +21,6 @@ export const TEST_DATA = {
 		},
 	},
 
-	// Test reminder data
-	REMINDERS: {
-		listName: "Test-Claude-Reminders",
-		testReminder: {
-			name: "Claude Test Reminder",
-			notes: "This is a test reminder created by Claude",
-		},
-	},
-
-	// Test calendar data
-	CALENDAR: {
-		calendarName: "Test-Claude-Calendar",
-		testEvent: {
-			title: "Claude Test Event",
-			location: "Test Location",
-			notes: "This is a test calendar event created by Claude",
-		},
-	},
-
 	// Test mail data
 	MAIL: {
 		testSubject: "Claude MCP Test Email",

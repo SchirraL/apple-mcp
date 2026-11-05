@@ -28,11 +28,57 @@
 		"entry_point": "dist/index.js",
 		"mcp_config": {
 			"command": "node",
-			"args": ["${__dirname}/dist/index.js"],
+			"args": [
+				"${__dirname}/dist/index.js"
+			],
 			"env": {}
 		}
 	},
 	"tools": [
+		{
+			"name": "list_reminder_lists",
+			"description": "List all Apple Reminders lists with their number of open reminders."
+		},
+		{
+			"name": "list_reminders",
+			"description": "List or search Apple Reminders, sorted by due date (undated last). Filters combine. By default only open (not completed) reminders are returned."
+		},
+		{
+			"name": "create_reminder",
+			"description": "Create a reminder in Apple Reminders. Uses the default list if none given."
+		},
+		{
+			"name": "update_reminder",
+			"description": "Change fields of an existing reminder. Only the fields given are changed; pass null for notes or dueDate to clear them."
+		},
+		{
+			"name": "complete_reminder",
+			"description": "Mark a reminder as completed (or reopen it with completed: false)."
+		},
+		{
+			"name": "delete_reminder",
+			"description": "Permanently delete a reminder. Requires confirm: true; otherwise previews."
+		},
+		{
+			"name": "list_calendars",
+			"description": "List all Apple Calendar calendars with their account and writability."
+		},
+		{
+			"name": "list_calendar_events",
+			"description": "List Apple Calendar events in a time range, sorted by start. Defaults to the next 7 days. The range may not exceed 4 years. Recurring events appear once per occurrence."
+		},
+		{
+			"name": "create_calendar_event",
+			"description": "Create an event in Apple Calendar. A date-only start (YYYY-MM-DD) creates an all-day event; timed events default to 1 hour if no end is given. Uses the default calendar if none is given."
+		},
+		{
+			"name": "update_calendar_event",
+			"description": "Change fields of an existing event. Only the fields given are changed; pass null for location, notes or url to clear them. For recurring events pass occurrenceStart and choose span."
+		},
+		{
+			"name": "delete_calendar_event",
+			"description": "Permanently delete a calendar event. Requires confirm: true; otherwise previews. For recurring events pass occurrenceStart and choose span."
+		},
 		{
 			"name": "contacts",
 			"description": "Search and retrieve contacts from Apple Contacts app"
@@ -50,20 +96,14 @@
 			"description": "Interact with Apple Mail app - read unread emails, search emails, and send emails"
 		},
 		{
-			"name": "reminders",
-			"description": "Search, create, and open reminders in Apple Reminders app"
-		},
-		{
-			"name": "calendar",
-			"description": "Search, create, and open calendar events in Apple Calendar app"
-		},
-		{
 			"name": "maps",
 			"description": "Search locations, manage guides, save favorites, and get directions using Apple Maps"
 		}
 	],
 	"compatibility": {
-		"platforms": ["darwin"]
+		"platforms": [
+			"darwin"
+		]
 	},
 	"user_config": {},
 	"license": "MIT",

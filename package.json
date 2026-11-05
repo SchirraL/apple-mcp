@@ -24,7 +24,7 @@
 	},
 	"scripts": {
 		"dev": "bun run index.ts",
-		"build": "bun build index.ts --outfile=dist/index.js --target=node --minify",
+		"build": "bun run scripts/sync-manifest.ts && bun build index.ts --outfile=dist/index.js --target=node --minify",
 		"start": "node dist/index.js",
 		"prepublishOnly": "bun run build",
 		"test": "bun run test-runner.ts all",
@@ -34,7 +34,6 @@
 		"test:messages": "bun test tests/integration/messages.test.ts --preload ./tests/setup.ts",
 		"test:notes": "bun test tests/integration/notes.test.ts --preload ./tests/setup.ts",
 		"test:mail": "bun test tests/integration/mail.test.ts --preload ./tests/setup.ts",
-		"test:calendar": "bun test tests/integration/calendar.test.ts --preload ./tests/setup.ts",
 		"test:maps": "bun test tests/integration/maps.test.ts --preload ./tests/setup.ts",
 		"test:web-search": "bun test tests/integration/web-search.test.ts --preload ./tests/setup.ts",
 		"test:mcp": "bun test tests/mcp/handlers.test.ts --preload ./tests/setup.ts",
