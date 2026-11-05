@@ -2,7 +2,7 @@
 	"dxt_version": "0.1",
 	"name": "apple-mcp",
 	"display_name": "Apple MCP",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Apple MCP tools for contacts, notes, messages, mail, reminders, calendar, and maps integration",
 	"long_description": "Apple MCP gives LLMs access to Apple's native apps including Contacts, Notes, Messages, Mail, Reminders, Calendar, and Maps. This integration allows LLMs to interact with these apps seamlessly, enabling comprehensive automation of daily tasks like managing contacts, creating notes, sending messages, handling emails, setting reminders, managing calendar events, and navigating with Maps.",
 	"author": {
@@ -28,42 +28,186 @@
 		"entry_point": "dist/index.js",
 		"mcp_config": {
 			"command": "node",
-			"args": ["${__dirname}/dist/index.js"],
+			"args": [
+				"${__dirname}/dist/index.js"
+			],
 			"env": {}
 		}
 	},
 	"tools": [
 		{
-			"name": "contacts",
-			"description": "Search and retrieve contacts from Apple Contacts app"
+			"name": "list_reminder_lists",
+			"description": "List all Apple Reminders lists with their number of open reminders."
 		},
 		{
-			"name": "notes",
-			"description": "Search, retrieve and create notes in Apple Notes app"
+			"name": "list_reminders",
+			"description": "List or search Apple Reminders, sorted by due date (undated last). Filters combine. By default only open (not completed) reminders are returned."
 		},
 		{
-			"name": "messages",
-			"description": "Interact with Apple Messages app - send, read, schedule messages and check unread messages"
+			"name": "create_reminder",
+			"description": "Create a reminder in Apple Reminders. Uses the default list if none given."
 		},
 		{
-			"name": "mail",
-			"description": "Interact with Apple Mail app - read unread emails, search emails, and send emails"
+			"name": "update_reminder",
+			"description": "Change fields of an existing reminder. Only the fields given are changed; pass null for notes or dueDate to clear them."
 		},
 		{
-			"name": "reminders",
-			"description": "Search, create, and open reminders in Apple Reminders app"
+			"name": "complete_reminder",
+			"description": "Mark a reminder as completed (or reopen it with completed: false)."
 		},
 		{
-			"name": "calendar",
-			"description": "Search, create, and open calendar events in Apple Calendar app"
+			"name": "delete_reminder",
+			"description": "Permanently delete a reminder. Requires confirm: true; otherwise previews."
 		},
 		{
-			"name": "maps",
-			"description": "Search locations, manage guides, save favorites, and get directions using Apple Maps"
+			"name": "list_calendars",
+			"description": "List all Apple Calendar calendars with their account and writability."
+		},
+		{
+			"name": "list_calendar_events",
+			"description": "List Apple Calendar events in a time range, sorted by start. Defaults to the next 7 days. The range may not exceed 4 years. Recurring events appear once per occurrence."
+		},
+		{
+			"name": "create_calendar_event",
+			"description": "Create an event in Apple Calendar. A date-only start (YYYY-MM-DD) creates an all-day event; timed events default to 1 hour if no end is given. Uses the default calendar if none is given."
+		},
+		{
+			"name": "update_calendar_event",
+			"description": "Change fields of an existing event. Only the fields given are changed; pass null for location, notes or url to clear them. For recurring events pass occurrenceStart and choose span."
+		},
+		{
+			"name": "delete_calendar_event",
+			"description": "Permanently delete a calendar event. Requires confirm: true; otherwise previews. For recurring events pass occurrenceStart and choose span."
+		},
+		{
+			"name": "list_note_folders",
+			"description": "List all Apple Notes folders with their account and note count."
+		},
+		{
+			"name": "list_notes",
+			"description": "List Apple Notes, sorted by last modified, newest first. Returns snippets only; use read_note for the full text."
+		},
+		{
+			"name": "read_note",
+			"description": "Read one Apple Note in full (plain text, optionally raw HTML). Locked (password-protected) notes return no text."
+		},
+		{
+			"name": "create_note",
+			"description": "Create an Apple Note. With format text the body is converted line by line; the title becomes the note's heading. Uses the default folder if none is given."
+		},
+		{
+			"name": "update_note",
+			"description": "Change an existing note. title renames it, body REPLACES everything below the title, append adds to the end (body and append are mutually exclusive). Requires confirm: true (otherwise previews) when replacing the body or when the note has attachments or is shared; renaming or appending to a plain note applies directly."
+		},
+		{
+			"name": "delete_note",
+			"description": "Delete a note (moves it to \"Recently Deleted\"). Requires confirm: true; otherwise previews."
+		},
+		{
+			"name": "list_message_chats",
+			"description": "List recent Messages (iMessage/SMS) conversations, newest first: chat id, display name (groups), participant handles, last message date and unread count. Use the chat id with read_messages, search_messages or send_message. Contact names are not resolved: handles are phone numbers or emails."
+		},
+		{
+			"name": "read_messages",
+			"description": "Read messages of one conversation, newest first. Identify it by chatId (from list_message_chats) or by handle (phone number or email, one-to-one chats only). Optionally restrict to before/after an ISO date."
+		},
+		{
+			"name": "search_messages",
+			"description": "Search message text (case-insensitive substring) across all chats or within one chat, newest first. Scans the most recent ~5000 messages."
+		},
+		{
+			"name": "list_unread_messages",
+			"description": "List unread incoming messages across all chats, newest first."
+		},
+		{
+			"name": "send_message",
+			"description": "Send an iMessage/SMS via the Messages app to a handle (phone number or email) or an existing chat (chatId, needed for group chats). Provide exactly one of `to` or `chatId`. Requires confirm: true; without it only a preview of the recipient and exact text is returned and nothing is sent."
+		},
+		{
+			"name": "search_contacts",
+			"description": "Search Apple Contacts by name, organisation, nickname, email or phone number (case-insensitive; all words must match). Returns id, name, organisation, phones and emails; use get_contact for full details."
+		},
+		{
+			"name": "get_contact",
+			"description": "Get one contact in full: all phones and emails with labels, postal addresses, organisation, job title, birthday and URLs. The note field is not available."
+		},
+		{
+			"name": "list_contacts",
+			"description": "List contacts sorted by name, one page at a time. Use offset to page through; the summary line shows the total."
+		},
+		{
+			"name": "find_contact_by_phone",
+			"description": "Find who a phone number belongs to. Matches regardless of formatting and country prefix, so \"+49 171 1234567\" finds a contact stored as \"0171 1234567\"."
+		},
+		{
+			"name": "create_contact",
+			"description": "Create a new contact in the default account. Needs at least a name or an organisation. Birthday as YYYY-MM-DD (or --MM-DD)."
+		},
+		{
+			"name": "update_contact",
+			"description": "Change a contact. Adding phones/emails/urls (addPhones, addEmails, addUrls) or filling an empty field applies immediately; changing or clearing a field that already has a value requires confirm: true, otherwise it previews. Pass null to clear a field."
+		},
+		{
+			"name": "search_places",
+			"description": "Search Apple Maps for places (businesses, stations, addresses, landmarks) and return name, address, coordinates, phone, website and category. Read-only; does not open Maps. Without `near`, results come from the Mac's default region. `near` is best effort: results are merged and sorted by distance to that area, but far-away cities can yield few hits; then search for a specific name instead."
+		},
+		{
+			"name": "get_directions",
+			"description": "Calculate a route between two places with Apple Maps data: distance, expected travel time and (for driving and walking) turn-by-turn steps, plus alternatives. Read-only; does not open Maps (use open_in_maps for that). Transit returns only an estimate of distance and time. `from` and `to` are place names, addresses or \"lat,lon\"; include the city to avoid ambiguity."
+		},
+		{
+			"name": "open_in_maps",
+			"description": "UI SIDE EFFECT: opens and brings the Maps app to the front, showing a place search or a route. Use only when the user wants to see it in Maps; for data use search_places or get_directions. Give `query` for a place, or `to` (optionally `from`, default current location) for a route. Cannot save favorites, guides or pins: Maps offers no API for that."
+		},
+		{
+			"name": "list_email_accounts",
+			"description": "List the accounts configured in Apple Mail, with their email addresses."
+		},
+		{
+			"name": "list_email_folders",
+			"description": "List Apple Mail folders (mailboxes) with unread and total message counts, optionally for one account."
+		},
+		{
+			"name": "list_emails",
+			"description": "List emails in a folder, newest first, with sender, date, read/flagged state and a short snippet. Defaults to the INBOX of all accounts. Use read_email for the full text and search_emails to look for something."
+		},
+		{
+			"name": "search_emails",
+			"description": "Search emails, newest first. Each word of query must appear (case-insensitive) in the subject, sender name/address or the message preview text; full bodies are not searched. Searches the INBOX unless a folder is given. Optional date range."
+		},
+		{
+			"name": "read_email",
+			"description": "Read one email in full: plain-text body, recipients (to/cc) and attachment names."
+		},
+		{
+			"name": "create_draft",
+			"description": "Save a new email as a draft in Apple Mail's Drafts folder without sending it and without opening a compose window. No confirmation needed. It lands in the Drafts folder of the sending account and can take a minute to show up in list_emails / search_emails (Mail indexes it after syncing)."
+		},
+		{
+			"name": "send_email",
+			"description": "Send a new email. Requires confirm: true; without it only a preview of from/to/cc/bcc/subject/body is returned and nothing is sent."
+		},
+		{
+			"name": "reply_email",
+			"description": "Reply to an email. By default only saves a reply DRAFT (quoting the original) that the user can review in Mail. With send: true the reply is sent, which requires confirm: true (otherwise a preview is returned)."
+		},
+		{
+			"name": "move_email",
+			"description": "Move an email to another folder of its account (use list_email_folders for names; \"Account/Folder\" targets another account). The id stays valid. Moving to Trash/Deleted/Junk/Spam requires confirm: true (otherwise previews); other moves apply directly."
+		},
+		{
+			"name": "mark_email_read",
+			"description": "Mark an email as read (default) or unread."
+		},
+		{
+			"name": "flag_email",
+			"description": "Flag (default) or unflag an email."
 		}
 	],
 	"compatibility": {
-		"platforms": ["darwin"]
+		"platforms": [
+			"darwin"
+		]
 	},
 	"user_config": {},
 	"license": "MIT",
