@@ -35,6 +35,10 @@ Apps and their backends (chosen by measurement — see Gotchas):
 | messages | `chat.db` via `sqlite3 -readonly` | Messages AppleScript |
 | mail | `Envelope Index` via `sqlite3 -readonly` | Mail scripting |
 | maps | MapKit / CLGeocoder | — (`open_in_maps` opens UI) |
+| files, finder, pdf | node `fs`, `mdfind`, PDFKit | `fs`, NSFileManager (Trash), NSURL tags |
+| shortcuts | `shortcuts` CLI (30s cached list) | `shortcuts run` (always confirm-gated unless allowlisted) |
+| music | Music scripting (batched) | Music scripting — **unverified on a non-empty library** |
+| obsidian | vault files via `fs` (registry: obsidian.json) | `fs`, atomic overwrite |
 
 SQLite access: always the system `sqlite3` CLI (`-readonly`, `mode=ro` URI) — never
 `bun:sqlite` (the build runs on node). User values go in as hex literals, never raw SQL.
@@ -43,9 +47,9 @@ Messages and Mail reads need Full Disk Access for the host process.
 ## Roadmap (priority order)
 1. ~~Refactor to per-tool modules~~ (done 2026-11-05)
 2. ~~Full CRUD on core apps~~ (done; contacts has no delete tool yet)
-3. Files & Finder: list/search/read files, Finder search, PDF text extraction
-4. Shortcuts (list/run/view) and Music (playback, search, playlists)
-5. Obsidian (vault list, search, read/write notes) — first third-party app; others later
+3. ~~Files & Finder, PDF~~ (done)
+4. ~~Shortcuts, Music~~ (done; Music needs a live round-trip with a real library)
+5. ~~Obsidian~~ (done) — more third-party apps later
 
 LMCP's tool set is the reference for scope/naming. Copy capabilities, not code.
 
@@ -108,5 +112,10 @@ tool — only `trash_file` (confirm-gated).
   up to a minute to appear in the index. Contacts: `note` can't be read from osascript.
 - JXA out-parameters: passing `Ref()` and reading `out[0]` can segfault osascript (seen with
   NSFileManager trashItemAtURL) — pass `null` when the out value isn't needed.
+- Music JXA: `whose({_or: …})` fails ("Can't convert types") and batched reads on an empty
+  track list throw "Can't get object" — check `.length` first, filter in JS.
+- Tool names are global: Obsidian tools are `obsidian_*`, Music `music_*` (registry throws on
+  duplicates). Obsidian refuses dot-segments in note paths so writes can't reach
+  `.obsidian/plugins`.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

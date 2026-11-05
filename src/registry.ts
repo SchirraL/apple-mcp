@@ -7,9 +7,12 @@ import { createFinderModule } from "./tools/finder/handler.js";
 import { createMailModule } from "./tools/mail/handler.js";
 import { createMapsModule } from "./tools/maps/handler.js";
 import { createMessagesModule } from "./tools/messages/handler.js";
+import { createMusicModule } from "./tools/music/handler.js";
 import { createNotesModule } from "./tools/notes/handler.js";
+import { createObsidianModule } from "./tools/obsidian/handler.js";
 import { createPdfModule } from "./tools/pdf/handler.js";
 import { createRemindersModule } from "./tools/reminders/handler.js";
+import { createShortcutsModule } from "./tools/shortcuts/handler.js";
 
 /** Migrated apps. Add a module here — nothing else needs editing. */
 const modules: ToolModule[] = [
@@ -23,6 +26,9 @@ const modules: ToolModule[] = [
 	createPdfModule(),
 	createFilesModule(),
 	createFinderModule(),
+	createShortcutsModule(),
+	createMusicModule(),
+	createObsidianModule(),
 ];
 
 const owner = new Map<string, ToolModule>();

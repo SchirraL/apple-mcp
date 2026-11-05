@@ -266,6 +266,90 @@
 		{
 			"name": "set_file_tags",
 			"description": "Change the Finder tags of a file or folder. mode 'add' (default) adds tags and needs no confirmation; 'remove' removes the given tags and 'replace' sets exactly the given tags (empty list clears all) -- both require confirm: true when they would drop existing tags (otherwise they preview)."
+		},
+		{
+			"name": "list_shortcuts",
+			"description": "List the user's Apple Shortcuts (name, identifier, folder). Optional filters: 'folder' (folder name or identifier; 'none' for shortcuts not in a folder) and 'query' (case-insensitive name substring). Set includeFolders to also return the folder list. Use this to find the exact name/identifier before run_shortcut. Results are cached for about 30 seconds."
+		},
+		{
+			"name": "run_shortcut",
+			"description": "Run an Apple Shortcut by name or identifier, optionally with text input ('input') or a file as input ('inputPath'), and capture its output (text is returned inline; other output types are saved to a temp file whose path and type are returned). A shortcut can do anything the user's Shortcuts can (send messages, change files, control devices), so this ALWAYS requires confirm: true: call first without it to get a preview naming the exact shortcut and input, show that to the user, then call again with confirm: true. Exception: shortcuts whose name or identifier is listed in the server's APPLE_MCP_SHORTCUTS_ALLOW environment variable (comma-separated, case-insensitive) run without confirmation. Unknown or ambiguous names return an error with close matches; use list_shortcuts. timeoutSeconds defaults to 60 (max 300); shortcuts that wait for UI interaction will time out."
+		},
+		{
+			"name": "view_shortcut",
+			"description": "Open a shortcut in the Shortcuts app editor (UI side effect: launches/foregrounds Shortcuts and shows the shortcut; it does not run it). Accepts a name or identifier; ambiguous names return an error listing identifiers."
+		},
+		{
+			"name": "music_now_playing",
+			"description": "Apple Music player state: current track (name, artist, album, duration and position in seconds), volume 0-100, shuffle and repeat. Does not launch Music; returns \"Music is not running\" if it is closed."
+		},
+		{
+			"name": "music_play",
+			"description": "This affects audio playback on the Mac. Starts audio in Apple Music (launches Music if needed). With no arguments it resumes playback. To play something specific give an id (track or playlist persistent id from music_search_library / music_list_playlists) or an exact name plus optional kind (track, playlist, album, artist) and artist. Ambiguous matches return an error listing candidates; retry with an id or more detail. Albums/artists start at the first matching track."
+		},
+		{
+			"name": "music_pause",
+			"description": "This affects audio playback on the Mac. Pauses Apple Music playback. Fails if Music is not running."
+		},
+		{
+			"name": "music_next_track",
+			"description": "This affects audio playback on the Mac. Skips to the next track in Apple Music."
+		},
+		{
+			"name": "music_previous_track",
+			"description": "This affects audio playback on the Mac. Goes to the previous track (or the start of the current one) in Apple Music."
+		},
+		{
+			"name": "music_set_volume",
+			"description": "This affects audio playback on the Mac. Sets the Music app volume: level is absolute 0-100, delta is relative (e.g. -10, +15); give exactly one. The result is clamped to 0-100."
+		},
+		{
+			"name": "music_search_library",
+			"description": "Search the LOCAL Apple Music library (not the streaming catalog) by text in name, artist or album. kind track returns songs with persistent ids (use them for music_play / music_add_to_playlist); album and artist return grouped names with track counts."
+		},
+		{
+			"name": "music_list_playlists",
+			"description": "List Apple Music user playlists with id and track count. Smart playlists, folders and system playlists are skipped unless includeAll is true."
+		},
+		{
+			"name": "music_add_to_playlist",
+			"description": "Add library tracks (by persistent id) to an existing user playlist. Additive, no confirmation needed. Smart, folder and system playlists cannot be targeted."
+		},
+		{
+			"name": "music_create_playlist",
+			"description": "Create a new empty user playlist in Apple Music, optionally with initial tracks. No confirmation needed."
+		},
+		{
+			"name": "music_remove_from_playlist",
+			"description": "Remove tracks from a user playlist (the tracks stay in the library). Requires confirm: true; otherwise returns a preview of what would be removed."
+		},
+		{
+			"name": "obsidian_list_vaults",
+			"description": "List the Obsidian vaults on this Mac: name (folder name), path, number of notes, when last opened and whether it is currently open in Obsidian. Start here to get the vault name the other obsidian_* tools take."
+		},
+		{
+			"name": "obsidian_list_notes",
+			"description": "List Markdown notes in an Obsidian vault (optionally one folder), newest-modified first. Returns vault-relative path, title, modified time and size. Skips .obsidian, .trash and other dot-folders. Use obsidian_search_notes to find by content."
+		},
+		{
+			"name": "obsidian_search_notes",
+			"description": "Search an Obsidian vault by file name and content (case-insensitive; every word must appear). Optional tag filter (#tag in the body or tags: in frontmatter; parent tags match nested ones) and folder. Returns vault-relative path, title, modified time and 1-2 context snippets. Name matches rank first, then newest. Files over 1 MB are matched by name only."
+		},
+		{
+			"name": "obsidian_read_note",
+			"description": "Read one Obsidian note by vault-relative path ('Projects/Plan.md') or by note name as in a [[wikilink]] ('Plan'; an ambiguous name returns the candidate paths). Returns parsed frontmatter (scalars and lists), the body (paged with offset/limit in characters), outgoing [[links]]/embeds and tags. includeBacklinks scans the vault for notes linking here (capped at 50)."
+		},
+		{
+			"name": "obsidian_write_note",
+			"description": "Create or modify a Markdown note in an Obsidian vault. mode 'create' (default) fails if the note exists; 'append' adds content at the end and 'prepend' right after the frontmatter (both need an existing note, no confirmation); 'overwrite' replaces the whole note and, if it exists, requires confirm: true (preview first). Folders are created as needed. The path is vault-relative; '.md' is added if missing. Writes inside .obsidian or other dot-folders are refused."
+		},
+		{
+			"name": "obsidian_daily_note",
+			"description": "Read or append to the daily note of an Obsidian vault (today by default, or a date given as YYYY-MM-DD). Honors the vault's daily-notes settings (folder, date format, simple template). 'append' adds text at the end and creates the note (from the template, if any) when it does not exist yet; no confirmation needed."
+		},
+		{
+			"name": "obsidian_open_note",
+			"description": "Open a vault, or a note in it, in the Obsidian app (obsidian:// URL). Brings Obsidian to the front: only use when the user wants to see the note. To read content use obsidian_read_note."
 		}
 	],
 	"compatibility": {
