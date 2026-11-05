@@ -137,6 +137,20 @@ bun run service update-node --node <path> --yes  # replace the pinned node
 bun run service uninstall     # add --purge to also delete the token
 ```
 
+#### Menu bar app (optional)
+
+```bash
+bun run menubar install     # builds with swiftc (Xcode or Command Line Tools), installs to ~/Applications
+```
+
+An icon in the menu bar shows whether the service is healthy (bolt), missing a permission
+(warning triangle) or down (crossed-out bolt). The menu lists version, tools and apps, every
+permission from the doctor (click one to open its System Settings pane), the last few audit
+log entries, and offers Restart / Stop / Start server, open logs, and launch at login. You get a
+notification when the server has been unreachable for about 20 seconds, and again when it is
+back, unless you stopped it from the menu. "Quit" closes only the menu app; the server keeps
+running. Remove it with `bun run menubar uninstall`.
+
 ### Option B: stdio (no service)
 
 The client starts its own copy of the server on demand. Simpler, but every client runs a

@@ -190,3 +190,6 @@ dist
 
 # DXT bundles are build artifacts
 *.dxt
+
+# Menu bar app build output
+menubar/build/

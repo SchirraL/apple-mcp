@@ -28,6 +28,7 @@
 	"scripts": {
 		"dev": "bun run src/index.ts",
 		"service": "bun run scripts/service.ts",
+		"menubar": "bun run scripts/menubar.ts",
 		"build": "bun run scripts/sync-manifest.ts && bun build src/index.ts --outfile=dist/index.js --target=node --minify && bun build src/bridge.ts --outfile=dist/bridge.js --target=node --minify",
 		"start": "node dist/index.js",
 		"prepublishOnly": "bun run build",
