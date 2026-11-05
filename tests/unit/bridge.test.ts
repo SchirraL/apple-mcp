@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+	bridgeUrl,
 	errorFor,
 	flatten,
 	forward,
@@ -101,5 +102,17 @@ describe("parseLine", () => {
 		expect(parseLine('{"id":1}')).toEqual({ id: 1 });
 		expect(parseLine("  ")).toBeNull();
 		expect(parseLine("nope")).toBeNull();
+	});
+});
+
+describe("bridgeUrl", () => {
+	test("adds ?apps= for --apps and leaves the base URL alone otherwise", () => {
+		expect(bridgeUrl([], "http://h/mcp")).toBe("http://h/mcp");
+		expect(bridgeUrl(["--apps", "notes,mail"], "http://h/mcp")).toBe(
+			"http://h/mcp?apps=notes%2Cmail",
+		);
+	});
+	test("--apps without a value is an error", () => {
+		expect(() => bridgeUrl(["--apps"], "http://h/mcp")).toThrow(/comma-separated/);
 	});
 });
