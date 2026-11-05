@@ -8,40 +8,41 @@ kept clean enough to publish later.
 ## Commands
 - `bun install` — install deps (Bun via Homebrew: `brew install oven-sh/bun/bun`)
 - `bun run dev` — run the server on stdio (logs go to stderr; stdout is the MCP channel)
-- `bun run build` — sync `manifest.json` tools from the registry, then bundle to `dist/index.js`
+- `bun run build` — sync `manifest.json` tools/version from the registry, then bundle to
+  `dist/index.js` (what Claude Desktop / the .dxt runs)
 - `bun run typecheck` — `tsc --noEmit`
-- `bun run test:unit` — fast unit tests against fake bridges, no real apps touched
-- `bun run test` — integration tests against the REAL apps (creates notes/reminders/events;
-  never run casually). TODO: gate behind `APPLE_MCP_INTEGRATION=1`
+- `bun test` — unit tests against fake bridges; never touches real apps
 - `bun run inspect` — MCP Inspector against the dev server for manual testing
 
 ## Architecture
-Current (upstream) layout, to be migrated:
-- `index.ts` — one large `CallToolRequest` switch dispatching to `utils/*`
-- `tools.ts` — all tool schemas
-- `utils/<app>.ts` — AppleScript/JXA per app (contacts, notes, message, mail, reminders,
-  calendar, maps, web-search)
-
-Target layout (refactor in progress — one app at a time; done: reminders, calendar, notes. Until
-all are moved, `index.ts` stays at the root, asks `src/registry.ts` first, and falls back to
-the legacy switch):
 ```
 src/
-  index.ts            # server bootstrap + registry only
-  registry.ts         # collects ToolModules, routes calls
-  lib/applescript.ts  # shared runner: timeouts, escaping, error mapping
-  lib/safety.ts       # confirm/dry-run helpers
+  index.ts            # server bootstrap only
+  registry.ts         # the list of ToolModules — add an app here, nothing else
+  lib/applescript.ts  # runJxa / runAppleScript: timeouts, escaping, error mapping
+  lib/safety.ts       # confirmField + withConfirm (preview unless confirm: true)
+  lib/types.ts        # defineTool / toolModule (zod → JSON schema, validation, errors)
   tools/<app>/
-    handler.ts        # zod schemas (→ JSON schema) + MCP-facing logic; factory takes a bridge
-    bridge.ts         # AppleScript/JXA calls (the only part that touches the OS)
+    handler.ts        # zod schemas + MCP-facing logic; factory takes a bridge (for tests)
+    bridge.ts         # the only code that touches the OS
 ```
-Each `tools/<app>` exports a `ToolModule { tools, handle }`; adding an app must not require
-editing a central switch.
+Apps and their backends (chosen by measurement — see Gotchas):
+| app | reads | writes |
+|---|---|---|
+| reminders, calendar | EventKit (JXA ObjC bridge) | EventKit |
+| contacts | Contacts framework | Contacts framework |
+| notes | Notes scripting (batched) | Notes scripting |
+| messages | `chat.db` via `sqlite3 -readonly` | Messages AppleScript |
+| mail | `Envelope Index` via `sqlite3 -readonly` | Mail scripting |
+| maps | MapKit / CLGeocoder | — (`open_in_maps` opens UI) |
+
+SQLite access: always the system `sqlite3` CLI (`-readonly`, `mode=ro` URI) — never
+`bun:sqlite` (the build runs on node). User values go in as hex literals, never raw SQL.
+Messages and Mail reads need Full Disk Access for the host process.
 
 ## Roadmap (priority order)
-1. Refactor to per-tool modules (above)
-2. Full CRUD on core apps: update/delete/complete for Reminders, Calendar, Notes;
-   Mail move/flag/reply/drafts
+1. ~~Refactor to per-tool modules~~ (done 2026-11-05)
+2. ~~Full CRUD on core apps~~ (done; contacts has no delete tool yet)
 3. Files & Finder: list/search/read files, Finder search, PDF text extraction
 4. Shortcuts (list/run/view) and Music (playback, search, playlists)
 5. Obsidian (vault list, search, read/write notes) — first third-party app; others later
@@ -67,13 +68,13 @@ Without it, return a preview of exactly what would happen and make no changes. U
 paths. Creating new items (note, reminder, draft) does not need confirmation.
 
 ## Testing
-- Unit tests mock `bridge.ts`/the AppleScript runner — that's where most coverage goes.
-- Integration tests (`tests/integration`) run only with `APPLE_MCP_INTEGRATION=1`, use
-  clearly-prefixed fixtures (`[apple-mcp-test]`) and clean up after themselves.
+- Unit tests (`tests/unit`) use hand-written fake bridges — that's where coverage goes.
+- Live checks are manual round-trips with throwaway scripts against the real bridge, using
+  `[apple-mcp-test]`-prefixed items that are deleted afterwards. Read-only first.
 - Never send real messages/mail in tests; target only the configured test contact/address.
 
 ## Clients
-- Claude Code: registered via `.mcp.json` in this repo as `apple-mcp-dev` (runs source with Bun).
+- Claude Code: registered via `.mcp.json` in this repo as `apple-mcp-dev` (runs `src/index.ts`).
 - Claude Desktop: point `claude_desktop_config.json` at `dist/index.js` or install a built .dxt.
 - While LMCP is still installed, its tools overlap with ours — disable it (or the overlapping
   tools) when testing, or the client may call the wrong server.
@@ -93,5 +94,9 @@ paths. Creating new items (note, reminder, draft) does not need confirmation.
 - Notes: content is HTML; rewriting `body` can drop attachments, and shared notes change for
   others — such writes are confirm-gated. "Recently Deleted" is a normal folder to scripting
   (only listed when non-empty), recognised by localised name and hidden by default.
+- Maps: JXA can't set MKLocalSearch regions (uncatchable NSException), so `near` is weak;
+  transit directions give ETA only. A Swift helper would fix both.
+- Mail: Gmail folders are labels; ids are Message-ID headers (survive moves); new drafts take
+  up to a minute to appear in the index. Contacts: `note` can't be read from osascript.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

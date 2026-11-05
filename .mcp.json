@@ -2,7 +2,7 @@
   "mcpServers": {
     "apple-mcp-dev": {
       "command": "bun",
-      "args": ["run", "index.ts"]
+      "args": ["run", "src/index.ts"]
     }
   }
 }

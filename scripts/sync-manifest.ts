@@ -2,7 +2,6 @@
 // Runs as part of `bun run build`.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import legacyTools from "../tools.js";
 import { registeredTools } from "../src/registry.js";
 
 const path = join(import.meta.dir, "..", "manifest.json");
@@ -10,7 +9,7 @@ const manifest = JSON.parse(readFileSync(path, "utf8"));
 const pkg = JSON.parse(readFileSync(join(import.meta.dir, "..", "package.json"), "utf8"));
 
 manifest.version = pkg.version;
-manifest.tools = [...registeredTools, ...legacyTools].map((t) => ({
+manifest.tools = registeredTools.map((t) => ({
 	name: t.name,
 	description: t.description,
 }));
