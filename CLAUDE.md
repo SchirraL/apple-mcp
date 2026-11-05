@@ -67,6 +67,14 @@ Any tool that sends (mail, iMessage), deletes, or overwrites requires `confirm: 
 Without it, return a preview of exactly what would happen and make no changes. Unit-test both
 paths. Creating new items (note, reminder, draft) does not need confirmation.
 
+## File access policy
+Every tool that takes or returns a filesystem path uses `src/lib/paths.ts`:
+`resolveAllowedPath(input, mode)` for inputs, `isAllowedPath(abs)` to filter results.
+Default root is `$HOME`; secret stores (`~/.ssh`, keychains, cloud CLI creds, raw Mail/
+Messages stores, …) are always denied; symlinks are resolved before checking. Configure with
+`APPLE_MCP_FILE_ROOTS` / `APPLE_MCP_FILE_DENY` (colon-separated). There is no permanent-delete
+tool — only `trash_file` (confirm-gated).
+
 ## Testing
 - Unit tests (`tests/unit`) use hand-written fake bridges — that's where coverage goes.
 - Live checks are manual round-trips with throwaway scripts against the real bridge, using
@@ -98,5 +106,7 @@ paths. Creating new items (note, reminder, draft) does not need confirmation.
   transit directions give ETA only. A Swift helper would fix both.
 - Mail: Gmail folders are labels; ids are Message-ID headers (survive moves); new drafts take
   up to a minute to appear in the index. Contacts: `note` can't be read from osascript.
+- JXA out-parameters: passing `Ref()` and reading `out[0]` can segfault osascript (seen with
+  NSFileManager trashItemAtURL) — pass `null` when the out value isn't needed.
 - `.dxt` bundles are build artifacts — don't commit them (`*.dxt` is gitignored).
 - `manifest.json` (DXT) must stay in sync with registered tools and version.

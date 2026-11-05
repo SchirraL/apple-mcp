@@ -2,6 +2,7 @@ import type { Tool, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { OsaError } from "./applescript.js";
+import { PathPolicyError } from "./paths.js";
 
 export type { CallToolResult };
 
@@ -46,7 +47,8 @@ export function toolModule(defs: ToolDef<any>[]): ToolModule {
 				return await def.run(parsed.data);
 			} catch (error) {
 				const msg = error instanceof Error ? error.message : String(error);
-				if (!(error instanceof OsaError)) console.error(`[${name}]`, error);
+				const expected = error instanceof OsaError || error instanceof PathPolicyError;
+				if (!expected) console.error(`[${name}]`, error);
 				return errorResult(msg);
 			}
 		},
