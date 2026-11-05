@@ -1,30 +1,19 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { callTool, hasTool, registeredTools } from "./registry.js";
-import { errorResult } from "./lib/types.js";
+import { startHttpServer } from "./http.js";
+import { registeredTools } from "./registry.js";
+import { createMcpServer, VERSION } from "./server.js";
+import { getOrCreateToken, servicePort } from "./lib/service-config.js";
 
-// Server bootstrap only: every tool lives in src/tools/<app> and is wired in registry.ts.
-// stdout is the MCP channel — log to stderr only.
-
-const VERSION = "1.1.0";
+// Entry point. Default: stdio (client spawns the server). `--http`: local service mode, run
+// by launchd (see scripts/service.ts). stdout is the MCP channel in stdio mode — stderr only.
 
 async function main(): Promise<void> {
-	const server = new Server(
-		{ name: "apple-mcp", version: VERSION },
-		{ capabilities: { tools: {} } },
-	);
-
-	server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: registeredTools }));
-
-	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		const { name, arguments: args } = request.params;
-		if (!hasTool(name)) return errorResult(`Unknown tool: ${name}`);
-		return callTool(name, args ?? {});
-	});
-
-	await server.connect(new StdioServerTransport());
+	if (process.argv.includes("--http")) {
+		await startHttpServer({ port: servicePort(), token: getOrCreateToken() });
+		return;
+	}
+	await createMcpServer().connect(new StdioServerTransport());
 	console.error(`apple-mcp ${VERSION} running on stdio (${registeredTools.length} tools)`);
 }
 

@@ -13,6 +13,7 @@ kept clean enough to publish later.
 - `bun run typecheck` — `tsc --noEmit`
 - `bun test` — unit tests against fake bridges; never touches real apps
 - `bun run inspect` — MCP Inspector against the dev server for manual testing
+- `bun run service <install|uninstall|status|restart|logs|print-config>` — launchd service
 
 ## Architecture
 ```
@@ -85,9 +86,25 @@ tool — only `trash_file` (confirm-gated).
   `[apple-mcp-test]`-prefixed items that are deleted afterwards. Read-only first.
 - Never send real messages/mail in tests; target only the configured test contact/address.
 
+## Service mode (launchd)
+`node dist/index.js --http` serves MCP Streamable HTTP (stateless, JSON responses) on
+`127.0.0.1:47823/mcp` (`APPLE_MCP_PORT`). Gates in `src/http.ts`: Host allowlist (DNS
+rebinding), any browser `Origin` refused, bearer token from
+`~/Library/Application Support/apple-mcp/token` (0600; never in the plist or logs).
+`GET /health` is unauthenticated. The LaunchAgent `io.schirra.apple-mcp` starts it at login
+and restarts it on crash; logs in `~/Library/Logs/apple-mcp/`. After code changes:
+`bun run build && bun run service restart`.
+Under launchd, macOS privacy permissions belong to the **node binary** (Full Disk Access,
+Calendars, Reminders, Automation) — not the terminal. Homebrew node upgrades change the
+binary path and may require re-granting. `dist/bridge.js` is a stdio⇄HTTP bridge for
+stdio-only clients (Claude Desktop); it reads the token itself.
+
 ## Clients
 - Claude Code: registered via `.mcp.json` in this repo as `apple-mcp-dev` (runs `src/index.ts`).
-- Claude Desktop: point `claude_desktop_config.json` at `dist/index.js` or install a built .dxt.
+- Claude Desktop: `dist/bridge.js` → service (see `bun run service print-config`), or stdio
+  `dist/index.js` directly.
+- Claude Code (service): `claude mcp add --transport http --scope user apple-mcp …` from
+  `print-config`.
 - While LMCP is still installed, its tools overlap with ours — disable it (or the overlapping
   tools) when testing, or the client may call the wrong server.
 
