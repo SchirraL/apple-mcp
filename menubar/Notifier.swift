@@ -50,13 +50,44 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
 		Bundle.main.bundleIdentifier == nil ? nil : UNUserNotificationCenter.current()
 	}
 
-	/// Ask once (alert + sound) and become the delegate so clicks and foreground delivery work.
+	/// Become the delegate (clicks, foreground delivery) and ask while macOS hasn't decided.
+	/// Keyed on the real authorization status, not a saved flag: a failed or dismissed first
+	/// request must not stop us from asking again. macOS only ever shows the prompt once.
 	func prepare() async {
 		guard let center else { return }
 		center.delegate = self
-		if !UserDefaults.standard.bool(forKey: "notificationAuthAsked") {
-			UserDefaults.standard.set(true, forKey: "notificationAuthAsked")
-			_ = try? await center.requestAuthorization(options: [.alert, .sound])
+		UserDefaults.standard.removeObject(forKey: "notificationAuthAsked") // old flag, unused
+		if await center.notificationSettings().authorizationStatus == .notDetermined {
+			await request()
+		}
+	}
+
+	/// True when macOS allows this app's notifications.
+	func isAuthorized() async -> Bool {
+		guard let center else { return false }
+		let s = await center.notificationSettings().authorizationStatus
+		return s == .authorized || s == .provisional
+	}
+
+	/// Menu action: prompt if undecided, otherwise open this app's Notifications settings.
+	func requestOrOpenSettings() async {
+		guard let center else { return }
+		if await center.notificationSettings().authorizationStatus == .notDetermined {
+			await request()
+		} else {
+			let id = Bundle.main.bundleIdentifier ?? "io.schirra.apple-mcp.menubar"
+			let url = "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(id)"
+			if let u = URL(string: url) { NSWorkspace.shared.open(u) }
+		}
+	}
+
+	private func request() async {
+		do {
+			let granted = try await UNUserNotificationCenter.current()
+				.requestAuthorization(options: [.alert, .sound])
+			FileHandle.standardError.write(Data("[notify] authorization granted=\(granted)\n".utf8))
+		} catch {
+			FileHandle.standardError.write(Data("[notify] requestAuthorization failed: \(error)\n".utf8))
 		}
 	}
 

@@ -11,6 +11,7 @@ final class Model: ObservableObject {
 	@Published var activity: [Activity] = []
 	@Published var busy: String?
 	@Published var loginEnabled = SMAppService.mainApp.status == .enabled
+	@Published var notifyAuthorized = true
 	@Published var notifyEnabled = UserDefaults.standard.object(forKey: "notifyOnDown") as? Bool ?? true
 	private(set) var monitor = DownMonitor()
 	private var lastDoctor = Date.distantPast
@@ -40,6 +41,7 @@ final class Model: ObservableObject {
 	}
 
 	func refreshFast() async {
+		notifyAuthorized = await Notifier.shared.isAuthorized() // cheap; tracks Settings changes
 		async let h = Backend.health()
 		async let l = Backend.launchd()
 		async let a = Backend.activity()
@@ -84,6 +86,7 @@ final class Model: ObservableObject {
 	/// Called when the menu opens.
 	func menuOpened() {
 		Task {
+			notifyAuthorized = await Notifier.shared.isAuthorized()
 			await refreshFast()
 			await refreshDoctor()
 		}
@@ -197,7 +200,7 @@ final class Model: ObservableObject {
 		out += headerLines
 		out += ["[permissions]"] + permissionLines.map { $0 }
 		out += ["[activity]"] + (activity.isEmpty ? ["(none)"] : activity.map(activityLine))
-		out += ["[notify] enabled=\(notifyEnabled) \(monitor.summary)"]
+		out += ["[notify] enabled=\(notifyEnabled) authorized=\(notifyAuthorized) \(monitor.summary)"]
 		out += ["[login] \(loginStatusName)"]
 		return out.joined(separator: "\n")
 	}

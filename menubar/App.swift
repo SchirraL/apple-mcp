@@ -101,6 +101,14 @@ struct MenuContent: View {
 		Divider()
 		Toggle("Launch at login", isOn: Binding(get: { model.loginEnabled }, set: { model.setLogin($0) }))
 		Toggle("Notify when server goes down", isOn: Binding(get: { model.notifyEnabled }, set: { model.setNotify($0) }))
+		if model.notifyEnabled && !model.notifyAuthorized {
+			Button("Allow notifications…") {
+				Task {
+					await Notifier.shared.requestOrOpenSettings()
+					model.notifyAuthorized = await Notifier.shared.isAuthorized()
+				}
+			}
+		}
 		Button("Quit Apple MCP Menu (server keeps running)") { NSApplication.shared.terminate(nil) }
 			.keyboardShortcut("q")
 	}
