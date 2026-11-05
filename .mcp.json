@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "apple-mcp-dev": {
+      "command": "bun",
+      "args": ["run", "index.ts"]
+    }
+  }
+}

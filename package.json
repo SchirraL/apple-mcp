@@ -4,11 +4,11 @@
 	"module": "index.ts",
 	"type": "module",
 	"description": "Apple MCP tools for contacts, notes, messages, and mail integration",
-	"author": "Dhravya Shah",
+	"author": "Dhravya Shah (original author)",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/dhravya/apple-mcp.git"
+		"url": "git+https://github.com/SchirraL/apple-mcp.git"
 	},
 	"keywords": [
 		"mcp",
@@ -38,11 +38,15 @@
 		"test:calendar": "bun test tests/integration/calendar.test.ts --preload ./tests/setup.ts",
 		"test:maps": "bun test tests/integration/maps.test.ts --preload ./tests/setup.ts",
 		"test:web-search": "bun test tests/integration/web-search.test.ts --preload ./tests/setup.ts",
-		"test:mcp": "bun test tests/mcp/handlers.test.ts --preload ./tests/setup.ts"
+		"test:mcp": "bun test tests/mcp/handlers.test.ts --preload ./tests/setup.ts",
+		"typecheck": "tsc --noEmit",
+		"inspect": "bunx @modelcontextprotocol/inspector bun run index.ts",
+		"test:unit": "bun test tests/unit"
 	},
 	"devDependencies": {
-		"@types/bun": "latest",
-		"@types/node": "^22.13.4"
+		"@types/bun": "^1.2.0",
+		"@types/node": "^22.13.4",
+		"typescript": "^5.6.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
@@ -56,5 +60,8 @@
 		"mcp-proxy": "^2.4.0",
 		"run-applescript": "^7.0.0",
 		"zod": "^3.24.2"
-	}
+	},
+	"contributors": [
+		"Lars Schirra <lars@schirra.io>"
+	]
 }
