@@ -202,6 +202,70 @@
 		{
 			"name": "flag_email",
 			"description": "Flag (default) or unflag an email."
+		},
+		{
+			"name": "read_pdf",
+			"description": "Extract the text of a PDF file, page by page, with '--- Page N ---' markers and the total page count. Use fromPage/toPage (1-based) to read a range. Output is capped at maxChars; if truncated, the result says which page to continue from. Locked PDFs return an error; scanned PDFs without a text layer are reported explicitly (OCR is not supported). Use get_pdf_info for metadata only."
+		},
+		{
+			"name": "get_pdf_info",
+			"description": "Get PDF metadata without reading the full text: page count, title, author, subject, keywords, creator, producer, creation/modification dates, encrypted flag, file size, and whether the PDF has a text layer (sampled from a few pages; false suggests a scanned document)."
+		},
+		{
+			"name": "search_pdf",
+			"description": "Case-insensitive plain-text search inside one PDF. Returns page numbers with short context snippets (one entry per occurrence), up to `limit`. Use read_pdf with a page range to read the surrounding text."
+		},
+		{
+			"name": "list_files",
+			"description": "List files and folders in a directory (default: home). Returns path, name, type (file/dir/symlink), size in bytes and modified time; folders first, then by name. Use depth 1-5 to recurse and `pattern` (e.g. '*.pdf', 'report*') to filter by name. For content/metadata search across the Mac use the Finder search tool."
+		},
+		{
+			"name": "get_file_info",
+			"description": "Get metadata for a file or folder: type, kind, size, created/modified dates, permissions and symlink target (shown only if the target is an allowed location)."
+		},
+		{
+			"name": "read_file",
+			"description": "Read a text file (lines offset/limit, output capped at ~100 KB). Also extracts plain text from .docx .doc .rtf .rtfd .odt .html .webarchive. Binary files are refused; use read_pdf for PDFs. If truncated, call again with a higher offset."
+		},
+		{
+			"name": "write_file",
+			"description": "Write text to a file. mode 'create' (default) fails if the file exists; 'append' adds to the end; 'overwrite' replaces an existing file and needs confirm: true (without it you get a preview). Parent folders are created only with createDirs: true. Overwrites are atomic."
+		},
+		{
+			"name": "create_folder",
+			"description": "Create a folder (and missing parents). No-op if it already exists."
+		},
+		{
+			"name": "move_file",
+			"description": "Move or rename a file or folder. If the destination already exists it would be replaced, which needs confirm: true (preview first). Destination is the full new path, not a folder to move into."
+		},
+		{
+			"name": "trash_file",
+			"description": "Move a file or folder to the Trash (recoverable from Finder). Always requires confirm: true; without it you get a preview. Nothing is ever permanently deleted."
+		},
+		{
+			"name": "search_files",
+			"description": "Search files and folders with macOS Spotlight. 'query' matches file names and file contents (all words must match); set nameOnly to match names only. '*' in the query is literal unless wildcards is true. Filter by kind, modified date range and folder. Results (path, name, kind, size, modified) are sorted newest-modified first and limited to allowed folders. Only indexed locations are searched. For listing the contents of one folder use the files tools instead."
+		},
+		{
+			"name": "list_recent_files",
+			"description": "List files and folders the user opened or used recently (Spotlight last-used date), newest-modified first. Defaults to the last 7 days."
+		},
+		{
+			"name": "get_finder_selection",
+			"description": "Read-only: the paths currently selected in the frontmost Finder window, plus the folder that window shows. Empty when nothing is selected or no window is open. Paths outside the allowed folders are left out."
+		},
+		{
+			"name": "reveal_in_finder",
+			"description": "UI side effect: opens a Finder window showing the file or folder, selects it and brings Finder to the front. Use only when the user wants to see it in Finder."
+		},
+		{
+			"name": "get_file_tags",
+			"description": "Read the Finder tags (e.g. 'Red', 'Work') of a file or folder."
+		},
+		{
+			"name": "set_file_tags",
+			"description": "Change the Finder tags of a file or folder. mode 'add' (default) adds tags and needs no confirmation; 'remove' removes the given tags and 'replace' sets exactly the given tags (empty list clears all) -- both require confirm: true when they would drop existing tags (otherwise they preview)."
 		}
 	],
 	"compatibility": {
